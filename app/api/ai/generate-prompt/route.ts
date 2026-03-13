@@ -6,10 +6,10 @@ const apiKey = process.env.GOOGLE_AI_API_KEY || '';
 // Text model - using correct model name
 const genAI = new GoogleGenerativeAI(apiKey);
 const textModel = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-3.1-flash-lite-preview',
 });
 const imageModel = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-3.1-flash-lite-preview',
 });
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       description?: string;
       imageUrl?: string;
       question?: string;
-      challenges?: string[];
+      prompts?: string[];
       steps?: Array<{ step: number; label: string; placeholder: string }>;
     } | null = null;
 
@@ -158,64 +158,42 @@ export async function POST(request: NextRequest) {
       }
 
       case 'whysos': {
-        const defaultChallenges = [
-          '最近感じたイライラの原因',
-          '最近直面した仕事の課題',
-          '最近成功したことの背景',
-          '最近失敗したことの根本原因',
-          '最近気になっていることの根本原因',
-          '最近変えたい習慣の理由'
-        ];
+        const prompt = `なぜなぜ分析（5回のなぜ？）のための、日常的で深掘りしやすい「具体的な問題・課題」を3つ提案してください。
 
-        const prompt = `なぜなぜ分析（5回のなぜ？）のための、日常的で深掘りしやすい課題を3つ生成してください。
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["課題1", "課題2", "課題3"]
+}
 
-【出力形式】
-1. 課題1
-2. 課題2
-3. 課題3
-
-【条件】
-- 日常的で、誰にでも起こりうる課題であること
+条件：
+- 日常的で、誰にでも起こりうる具体的な課題であること
 - 日本語で自然な表現であること
-- 深掘りが可能な課題であること
-- 各課題は簡潔に（20文字以内）
+- 深掘りが可能なものであること
+- 各課題は簡潔に（25文字以内）`;
 
-課題のみを3つ出力してください。`;
-
-        let challenges = defaultChallenges.slice(0, 3);
+        let prompts = [
+          '最近感じたイライラの原因',
+          '仕事でミスをしてしまった背景',
+          'ついついスマホを触ってしまう理由'
+        ];
 
         try {
           const aiResult = await textModel.generateContent(prompt);
           const text = aiResult.response.text().trim();
-
-          // Parse the response - extract challenges
-          const lines = text.split('\n').filter(line => line.trim());
-
-          // Try to find numbered list format
-          const numberedList = lines
-            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-            .filter(line => line.length > 3);
-
-          if (numberedList.length >= 3) {
-            challenges = numberedList.slice(0, 3);
-          } else {
-            // Fallback: extract non-empty lines
-            const extracted = lines
-              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-              .slice(0, 3);
-            if (extracted.length >= 2) {
-              challenges = extracted;
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
             }
           }
         } catch (error) {
           console.error('AI generation error for whysos:', error);
-          // Keep default challenges on error
         }
 
         result = {
-          question: '', // Will be set by user selection
-          challenges,
+          question: '',
+          prompts,
           steps: [
             { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
@@ -228,62 +206,42 @@ export async function POST(request: NextRequest) {
       }
 
       case 'sowhat': {
-        const defaultThemes = [
-          '最近読んだニュースの本質',
-          '最近の仕事での出来事から得られる教訓',
-          '最近の友人との会話の意味',
-          '最近の失敗体験から学ぶべきこと',
-          '最近観察した社会現象の背景',
-          '最近の成功体験から得られる洞察'
+        const prompt = `「つまり何？」分析のための、抽象化・深掘りしやすい「事実やニュース」を3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["事実1", "事実2", "事実3"]
+}
+
+条件：
+- 具体的な事実や現象から始まるものであること
+- 抽象度を上げられる余地があること
+- 行動可能な教訓に落とし込めるものであること
+- 各お題は簡潔に（25文字以内）`;
+
+        let prompts = [
+          '最近読んだ興味深いニュース',
+          '仕事で学んだ小さな教訓',
+          '街で見かけた不思議な流行'
         ];
-
-        const prompt = `「つまり何？」分析のための、抽象化・深掘りしやすいテーマを3つ生成してください。
-
-【出力形式】
-1. テーマ1
-2. テーマ2
-3. テーマ3
-
-【条件】
-- 具体的な事実から始まるテーマであること
-- 抽象度を上げられるテーマであること
-- 行動可能な教訓に落とし込めるテーマであること
-- 各テーマは簡潔に（20文字以内）
-
-テーマのみを3つ出力してください。`;
-
-        let challenges = defaultThemes.slice(0, 3);
 
         try {
           const aiResult = await textModel.generateContent(prompt);
           const text = aiResult.response.text().trim();
-
-          // Parse the response - extract challenges
-          const lines = text.split('\n').filter(line => line.trim());
-
-          const numberedList = lines
-            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-            .filter(line => line.length > 3);
-
-          if (numberedList.length >= 3) {
-            challenges = numberedList.slice(0, 3);
-          } else {
-            const extracted = lines
-              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-              .slice(0, 3);
-            if (extracted.length >= 2) {
-              challenges = extracted;
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
             }
           }
         } catch (error) {
           console.error('AI generation error for sowhat:', error);
-          // Keep default challenges on error
         }
 
         result = {
-          question: '', // Will be set by user selection
-          challenges,
+          question: '',
+          prompts,
           steps: [
             { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
@@ -296,198 +254,135 @@ export async function POST(request: NextRequest) {
       }
 
       case '5w1h': {
-        const defaultThemes = [
-          '最近の買い物の5W1H整理',
-          '最近の会議の5W1H整理',
-          '最近の旅行の5W1H整理',
-          '最近のトラブル解決の5W1H整理',
-          '最近のプロジェクトの5W1H整理',
-          '最近の新しい習慣の5W1H整理'
+        const prompt = `5W1H分析のための、整理・分析しやすい「活動や計画」を3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["お題1", "お題2", "お題3"]
+}
+
+条件：
+- 具体的な出来事、イベント、活動であること
+- 6つの要素（When, Where, Who, What, Why, How）に分解可能なこと
+- 各お題は簡潔に（25文字以内）`;
+
+        let prompts = [
+          '新しい習慣の開始計画',
+          '次回の旅行のプランニング',
+          '仕事のプロジェクトの整理'
         ];
-
-        const prompt = `5W1H分析のための、整理・分析しやすいテーマを3つ生成してください。
-
-【出力形式】
-1. テーマ1
-2. テーマ2
-3. テーマ3
-
-【条件】
-- 具体的な出来事や活動であること
-- 6つの要素（When, Where, Who, What, Why, How）に分解できること
-- 行動プランを立てられるテーマであること
-- 各テーマは簡潔に（20文字以内）
-
-テーマのみを3つ出力してください。`;
-
-        let challenges = defaultThemes.slice(0, 3);
 
         try {
           const aiResult = await textModel.generateContent(prompt);
           const text = aiResult.response.text().trim();
-
-          // Parse the response - extract challenges
-          const lines = text.split('\n').filter(line => line.trim());
-
-          const numberedList = lines
-            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-            .filter(line => line.length > 3);
-
-          if (numberedList.length >= 3) {
-            challenges = numberedList.slice(0, 3);
-          } else {
-            const extracted = lines
-              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-              .slice(0, 3);
-            if (extracted.length >= 2) {
-              challenges = extracted;
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
             }
           }
         } catch (error) {
           console.error('AI generation error for 5w1h:', error);
-          // Keep default challenges on error
         }
 
         result = {
-          question: '', // Will be set by user selection
-          challenges,
+          question: '',
+          prompts,
           steps: [
-            { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
-            { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
-            { step: 3, label: 'Who（誰）', placeholder: '誰が関わっていましたか？（10〜20文字）' },
-            { step: 4, label: 'What（何）', placeholder: '何が起こりましたか？（10〜20文字）' },
-            { step: 5, label: 'Why（なぜ）', placeholder: 'なぜ起こりましたか？（10〜20文字）' },
-            { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
+            { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりますか？（10〜20文字）' },
+            { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりますか？（10〜20文字）' },
+            { step: 3, label: 'Who（誰）', placeholder: '誰が関わりますか？（10〜20文字）' },
+            { step: 4, label: 'What（何）', placeholder: '何をしますか？（10〜20文字）' },
+            { step: 5, label: 'Why（なぜ）', placeholder: 'なぜそれをするのですか？（10〜20文字）' },
+            { step: 6, label: 'How（どのように）', placeholder: 'どのように実行しますか？（10〜20文字）' }
           ]
         };
         break;
       }
 
       case 'prep': {
-        const defaultThemes = [
-          'リモートワークのメリットをPREP法で伝える',
-          '朝活の重要性をPREP法で伝える',
-          '時間管理の重要性をPREP法で伝える',
-          '継続の力をPREP法で伝える',
-          'デジタル detox の効果をPREP法で伝える',
-          '読書の価値をPREP法で伝える'
+        const prompt = `PREP法（結論-理由-具体例-結論）のための、説得力が必要な「主張・テーマ」を3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["テーマ1", "テーマ2", "テーマ3"]
+}
+
+条件：
+- 賛否がある、あるいは説明が必要な主張であること
+- 理由と具体例を挙げやすいものであること
+- 各テーマは簡潔に（25文字以内）`;
+
+        let prompts = [
+          'リモートワークの効率性',
+          '朝型の生活を送るべき理由',
+          '読書が人生に与える影響'
         ];
-
-        const prompt = `PREP法（Point-Reason-Example-Point）のための、説得力のあるテーマを3つ生成してください。
-
-【出力形式】
-1. テーマ1
-2. テーマ2
-3. テーマ3
-
-【条件】
-- 明確な主張（結論）を含むテーマであること
-- 理由と具体例を挙げられるテーマであること
-- 論理的に説得力のあるテーマであること
-- 各テーマは簡潔に（25文字以内）
-
-テーマのみを3つ出力してください。`;
-
-        let challenges = defaultThemes.slice(0, 3);
 
         try {
           const aiResult = await textModel.generateContent(prompt);
           const text = aiResult.response.text().trim();
-
-          // Parse the response - extract challenges
-          const lines = text.split('\n').filter(line => line.trim());
-
-          const numberedList = lines
-            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-            .filter(line => line.length > 3);
-
-          if (numberedList.length >= 3) {
-            challenges = numberedList.slice(0, 3);
-          } else {
-            const extracted = lines
-              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-              .slice(0, 3);
-            if (extracted.length >= 2) {
-              challenges = extracted;
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
             }
           }
         } catch (error) {
           console.error('AI generation error for prep:', error);
-          // Keep default challenges on error
         }
 
         result = {
-          question: '', // Will be set by user selection
-          challenges,
+          question: '',
+          prompts,
           steps: [
-            { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
-            { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
-            { step: 3, label: 'Example（具体例）', placeholder: '具体例を挙げてください（20〜40文字）' },
-            { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
+            { step: 1, label: 'Point（結論）', placeholder: '一番伝えたい主張を述べてください' },
+            { step: 2, label: 'Reason（理由）', placeholder: 'なぜそう言えるのか、理由を説明してください' },
+            { step: 3, label: 'Example（具体例）', placeholder: '納得感を高めるための具体例を挙げてください' },
+            { step: 4, label: 'Point（結論）', placeholder: '最後にもう一度、結論を強調してください' }
           ]
         };
         break;
       }
 
       case 'fogcatcher': {
-        const defaultThemes = [
-          '今の頭の中にある「ぼんやりとした悩み」',
-          '最近感じた「漠然とした不安」',
-          '最近のモヤモヤした感情',
-          '言いにくい思考',
-          '将来への不確かな思い',
-          '今の気分や感情の波'
+        const prompt = `Fog Catcher（思考の霧払い）のための、内省に適した「抽象的なテーマ」を3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["テーマ1", "テーマ2", "テーマ3"]
+}
+
+条件：
+- 思考や感情を率直に書き出しやすいもの
+- 普段は言葉にしないような曖昧な感情や状態
+- 各テーマは簡潔に（25文字以内）`;
+
+        let prompts = [
+          '今の頭の中にある漠然とした不安',
+          '自分にとっての理想の休息',
+          '最近感じた言葉にできない違和感'
         ];
-
-        const prompt = `Fog Catcher（思考の霧払い）のための、思考整理に適したテーマを3つ生成してください。
-
-【出力形式】
-1. テーマ1
-2. テーマ2
-3. テーマ3
-
-【条件】
-- 思考や感情を率直に表現できるテーマであること
-- 編集せずに書き出せるテーマであること
-- 言語化することで思考を整理できるテーマであること
-- 各テーマは簡潔に（20文字以内）
-
-テーマのみを3つ出力してください。`;
-
-        let challenges = defaultThemes.slice(0, 3);
 
         try {
           const aiResult = await textModel.generateContent(prompt);
           const text = aiResult.response.text().trim();
-
-          // Parse the response - extract challenges
-          const lines = text.split('\n').filter(line => line.trim());
-
-          const numberedList = lines
-            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-            .filter(line => line.length > 3);
-
-          if (numberedList.length >= 3) {
-            challenges = numberedList.slice(0, 3);
-          } else {
-            const extracted = lines
-              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-              .slice(0, 3);
-            if (extracted.length >= 2) {
-              challenges = extracted;
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
             }
           }
         } catch (error) {
           console.error('AI generation error for fogcatcher:', error);
-          // Keep default challenges on error
         }
 
         result = {
-          question: '', // Will be set by user selection
-          challenges,
+          question: '',
+          prompts,
           description: '思考や感情を制限なしで自由に書き出してください。編集せず、そのままの言葉で書くことで、思考の霧を晴らすことができます。'
         };
         break;

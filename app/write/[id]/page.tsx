@@ -29,7 +29,7 @@ export default function WritePage() {
     description: string;
     imageUrl?: string;
     question?: string;
-    challenges?: string[];
+    prompts?: string[];
     steps?: Array<{ step: number; label: string; placeholder: string }>;
   } | null>(null);
   const [stepInputs, setStepInputs] = useState<StepInput[]>([]);
@@ -45,7 +45,7 @@ export default function WritePage() {
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
-  const [showChallenges, setShowChallenges] = useState(true);
+  const [showPrompts, setShowPrompts] = useState(true);
 
   useEffect(() => {
     if (dynamicPrompts[id]) {
@@ -135,8 +135,8 @@ export default function WritePage() {
         console.log('Setting whysos content with result:', result);
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
-          description: result.question || result.challenges?.[0] || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
-          challenges: result.challenges,
+          description: result.question || '以下から深掘りしたい課題を選択してください。',
+          prompts: result.prompts,
           steps: result.steps || [
             { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
@@ -145,12 +145,12 @@ export default function WritePage() {
             { step: 5, label: '5回目「なぜ？」', placeholder: '根本原因を明確にしてください（20〜40文字）' }
           ]
         });
-        setShowChallenges(true);
+        setShowPrompts(true);
       } else if (type === 'sowhat') {
         setDynamicContent({
           title: 'So What?（つまり何？）',
-          description: result.question || result.challenges?.[0] || '最近読んだニュースの本質を「つまり何？」で掘り下げてください。',
-          challenges: result.challenges,
+          description: result.question || '以下から抽象化したいテーマを選択してください。',
+          prompts: result.prompts,
           steps: result.steps || [
             { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
@@ -159,12 +159,12 @@ export default function WritePage() {
             { step: 5, label: '5回目「つまり何？」', placeholder: '本質的な洞察をまとめてください（20〜40文字）' }
           ]
         });
-        setShowChallenges(true);
+        setShowPrompts(true);
       } else if (type === '5w1h') {
         setDynamicContent({
           title: '5W1H 展開',
-          description: result.question || result.challenges?.[0] || '最近の買い物について5W1Hで整理して行動プランを作成してください。',
-          challenges: result.challenges,
+          description: result.question || '以下から整理したいテーマを選択してください。',
+          prompts: result.prompts,
           steps: result.steps || [
             { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
             { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
@@ -174,12 +174,12 @@ export default function WritePage() {
             { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
           ]
         });
-        setShowChallenges(true);
+        setShowPrompts(true);
       } else if (type === 'prep') {
         setDynamicContent({
           title: 'PREP法',
-          description: result.question || result.challenges?.[0] || 'リモートワークのメリットをPREP法で伝えてください。',
-          challenges: result.challenges,
+          description: result.question || '以下から伝えたいテーマを選択してください。',
+          prompts: result.prompts,
           steps: result.steps || [
             { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
             { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
@@ -187,15 +187,15 @@ export default function WritePage() {
             { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
           ]
         });
-        setShowChallenges(true);
+        setShowPrompts(true);
       } else if (type === 'fogcatcher') {
         setDynamicContent(prev => ({
           title: 'Fog Catcher（思考の霧払い）',
-          description: result.question || result.challenges?.[0] || prev?.description || '思考や感情を制限なしで自由に書き出してください。',
-          challenges: result.challenges,
+          description: result.question || '以下から書き出したいテーマを選択してください。',
+          prompts: result.prompts,
           question: result.question
         }));
-        setShowChallenges(true);
+        setShowPrompts(true);
       }
     } catch (error) {
       console.error('Failed to generate dynamic prompt:', error);
@@ -245,14 +245,19 @@ export default function WritePage() {
     if (dynamicPrompts[id]) {
       setIsCustomTheme(false);
       setCustomTheme('');
-      setShowChallenges(true);
+      setShowPrompts(true);
+      setDynamicContent(prev => prev ? { ...prev, question: undefined } : null);
       await generateDynamicPrompt(id);
     }
   };
 
-  const handleSelectChallenge = (challenge: string) => {
-    setDynamicContent(prev => prev ? { ...prev, question: challenge } : null);
-    setShowChallenges(false);
+  const handleSelectChallenge = (prompt: string) => {
+    setDynamicContent(prev => prev ? { 
+      ...prev, 
+      question: prompt,
+      description: prompt 
+    } : null);
+    setShowPrompts(false);
   };
 
   const handleUseCustomTheme = () => {
@@ -402,35 +407,47 @@ export default function WritePage() {
           )}
 
           {/* Challenge Selector for training types with challenges */}
-          {(() => {
-            console.log('Challenges check:', {
-              showChallenges,
-              hasChallenges: !!dynamicContent?.challenges,
-              challengesLength: dynamicContent?.challenges?.length || 0,
-              challenges: dynamicContent?.challenges,
-              condition: showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1
-            });
-            return showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1;
-          })() && (
+          {/* Prompt Selector Grid */}
+          {dynamicContent?.prompts && dynamicContent.prompts.length > 0 && (
             <div className="mt-6">
-              <p className="text-sm text-muted-foreground mb-3">テーマを選んでください：</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {dynamicContent?.challenges?.map((challenge, index) => (
+              <p className="text-sm font-medium text-muted-foreground mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4 text-accent" />
+                トレーニングのお題を選択してください：
+              </p>
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
+                {dynamicContent.prompts.map((p, index) => (
                   <button
                     key={index}
-                    onClick={() => handleSelectChallenge(challenge)}
+                    onClick={() => handleSelectChallenge(p)}
                     className={`
-                      p-4 rounded-xl border text-left transition-all duration-200
-                      ${dynamicContent.question === challenge
-                        ? 'border-accent bg-accent/10 text-foreground shadow-sm'
-                        : 'border-border bg-input hover:border-accent/50 hover:bg-accent/5 text-foreground/80'}
+                      relative p-5 rounded-2xl border-2 text-left transition-all duration-300 group
+                      ${dynamicContent.question === p
+                        ? 'border-accent bg-accent/10 shadow-lg scale-[1.02] z-10'
+                        : 'border-border bg-input hover:border-accent/40 hover:bg-accent/5 hover:shadow-md'}
                     `}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-primary">#{index + 1}</span>
-                      {dynamicContent.question === challenge && <Check className="w-4 h-4 text-accent" />}
+                    <div className="flex justify-between items-start mb-3">
+                      <div className={`
+                        w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+                        ${dynamicContent.question === p ? 'bg-accent text-background' : 'bg-muted text-muted-foreground group-hover:bg-accent/20 group-hover:text-accent'}
+                      `}>
+                        {index + 1}
+                      </div>
+                      {dynamicContent.question === p && (
+                        <div className="bg-accent rounded-full p-1 animate-in zoom-in duration-300">
+                          <Check className="w-4 h-4 text-background" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm">{challenge}</p>
+                    <p className={`text-sm leading-relaxed font-medium ${dynamicContent.question === p ? 'text-foreground' : 'text-foreground/80'}`}>
+                      {p}
+                    </p>
+                    
+                    {dynamicContent.question === p && (
+                      <div className="absolute -bottom-2 -right-2 bg-accent text-background text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                        SELECTED
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
