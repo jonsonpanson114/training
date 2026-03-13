@@ -3,13 +3,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.GOOGLE_AI_API_KEY || '';
 
-// Text model
+// Text model - using correct model name
 const genAI = new GoogleGenerativeAI(apiKey);
 const textModel = genAI.getGenerativeModel({
-  model: 'gemini-3.1-flash-lite-preview',
+  model: 'gemini-1.5-flash',
 });
 const imageModel = genAI.getGenerativeModel({
-  model: 'gemini-3.1-flash-image-preview',
+  model: 'gemini-1.5-flash',
 });
 
 export async function POST(request: NextRequest) {
@@ -44,8 +44,16 @@ export async function POST(request: NextRequest) {
 
 現象のみを出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        result = { phenomenon: aiResult.response.text().trim() };
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          result = { phenomenon: aiResult.response.text().trim() };
+        } catch (error) {
+          console.error('AI generation error for abduction:', error);
+          // Fallback to default phenomenon
+          result = {
+            phenomenon: 'オフィスの全員がサングラスをかけてキーボードを猛烈に叩いているがPCの電源はすべて落ちている'
+          };
+        }
         break;
       }
 
@@ -65,16 +73,25 @@ export async function POST(request: NextRequest) {
 
 ペアのみを出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-        const matches = text.match(/「([^」]+)」「([^」]+)」/);
-        if (matches) {
-          result = { word1: matches[1], word2: matches[2] };
-        } else {
-          const words = text.split(/[\n]/).filter(w => w && w !== '」').map(w => w.replace(/」/g, '').trim());
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
+          const matches = text.match(/「([^」]+)」「([^」]+)」/);
+          if (matches) {
+            result = { word1: matches[1], word2: matches[2] };
+          } else {
+            const words = text.split(/[\n]/).filter(w => w && w !== '」').map(w => w.replace(/」/g, '').trim());
+            result = {
+              word1: words[0] || 'コーヒー',
+              word2: words[1] || '雲'
+            };
+          }
+        } catch (error) {
+          console.error('AI generation error for synapse:', error);
+          // Fallback to default words
           result = {
-            word1: words[0] || 'コーヒー',
-            word2: words[1] || '雲'
+            word1: 'コーヒー',
+            word2: '雲'
           };
         }
         break;
@@ -106,27 +123,35 @@ export async function POST(request: NextRequest) {
 
 シーンのみを出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const description = aiResult.response.text().trim();
-        result = { description };
-
-        // Generate image
         try {
-          const imagePrompt = `Photorealistic scene: ${description}. Cinematic lighting, mysterious atmosphere, high detail, 4K quality.`;
-          const imageResult = await imageModel.generateContent([
-            { text: imagePrompt }
-          ]);
+          const aiResult = await textModel.generateContent(prompt);
+          const description = aiResult.response.text().trim();
+          result = { description };
 
-          const imageData = imageResult.response.candidates?.[0]?.content?.parts?.[0];
-          if (imageData && 'inlineData' in imageData) {
-            const base64Data = imageData.inlineData?.data;
-            if (base64Data) {
-              const mimeType = imageData.inlineData?.mimeType || 'image/png';
-              result.imageUrl = `data:${mimeType};base64,${base64Data}`;
+          // Generate image
+          try {
+            const imagePrompt = `Photorealistic scene: ${description}. Cinematic lighting, mysterious atmosphere, high detail, 4K quality.`;
+            const imageResult = await imageModel.generateContent([
+              { text: imagePrompt }
+            ]);
+
+            const imageData = imageResult.response.candidates?.[0]?.content?.parts?.[0];
+            if (imageData && 'inlineData' in imageData) {
+              const base64Data = imageData.inlineData?.data;
+              if (base64Data) {
+                const mimeType = imageData.inlineData?.mimeType || 'image/png';
+                result.imageUrl = `data:${mimeType};base64,${base64Data}`;
+              }
             }
+          } catch (error) {
+            console.error('Image generation failed:', error);
           }
         } catch (error) {
-          console.error('Image generation failed:', error);
+          console.error('AI generation error for abduction-lens:', error);
+          // Fallback to default scene
+          result = {
+            description: '公園のベンチに置き去られた高級なハンドバッグ。周囲には誰もおらず、風が強く吹き抜けている'
+          };
         }
 
         break;
@@ -157,29 +182,35 @@ export async function POST(request: NextRequest) {
 
 課題のみを3つ出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-
-        // Parse the response - extract challenges
         let challenges = defaultChallenges.slice(0, 3);
-        const lines = text.split('\n').filter(line => line.trim());
 
-        // Try to find numbered list format
-        const numberedList = lines
-          .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-          .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-          .filter(line => line.length > 3);
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
 
-        if (numberedList.length >= 3) {
-          challenges = numberedList.slice(0, 3);
-        } else {
-          // Fallback: extract non-empty lines
-          const extracted = lines
-            .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-            .slice(0, 3);
-          if (extracted.length >= 2) {
-            challenges = extracted;
+          // Parse the response - extract challenges
+          const lines = text.split('\n').filter(line => line.trim());
+
+          // Try to find numbered list format
+          const numberedList = lines
+            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
+            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
+            .filter(line => line.length > 3);
+
+          if (numberedList.length >= 3) {
+            challenges = numberedList.slice(0, 3);
+          } else {
+            // Fallback: extract non-empty lines
+            const extracted = lines
+              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
+              .slice(0, 3);
+            if (extracted.length >= 2) {
+              challenges = extracted;
+            }
           }
+        } catch (error) {
+          console.error('AI generation error for whysos:', error);
+          // Keep default challenges on error
         }
 
         result = {
@@ -221,27 +252,33 @@ export async function POST(request: NextRequest) {
 
 テーマのみを3つ出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-
-        // Parse the response - extract challenges
         let challenges = defaultThemes.slice(0, 3);
-        const lines = text.split('\n').filter(line => line.trim());
 
-        const numberedList = lines
-          .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-          .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-          .filter(line => line.length > 3);
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
 
-        if (numberedList.length >= 3) {
-          challenges = numberedList.slice(0, 3);
-        } else {
-          const extracted = lines
-            .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-            .slice(0, 3);
-          if (extracted.length >= 2) {
-            challenges = extracted;
+          // Parse the response - extract challenges
+          const lines = text.split('\n').filter(line => line.trim());
+
+          const numberedList = lines
+            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
+            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
+            .filter(line => line.length > 3);
+
+          if (numberedList.length >= 3) {
+            challenges = numberedList.slice(0, 3);
+          } else {
+            const extracted = lines
+              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
+              .slice(0, 3);
+            if (extracted.length >= 2) {
+              challenges = extracted;
+            }
           }
+        } catch (error) {
+          console.error('AI generation error for sowhat:', error);
+          // Keep default challenges on error
         }
 
         result = {
@@ -283,27 +320,33 @@ export async function POST(request: NextRequest) {
 
 テーマのみを3つ出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-
-        // Parse the response - extract challenges
         let challenges = defaultThemes.slice(0, 3);
-        const lines = text.split('\n').filter(line => line.trim());
 
-        const numberedList = lines
-          .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-          .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-          .filter(line => line.length > 3);
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
 
-        if (numberedList.length >= 3) {
-          challenges = numberedList.slice(0, 3);
-        } else {
-          const extracted = lines
-            .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-            .slice(0, 3);
-          if (extracted.length >= 2) {
-            challenges = extracted;
+          // Parse the response - extract challenges
+          const lines = text.split('\n').filter(line => line.trim());
+
+          const numberedList = lines
+            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
+            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
+            .filter(line => line.length > 3);
+
+          if (numberedList.length >= 3) {
+            challenges = numberedList.slice(0, 3);
+          } else {
+            const extracted = lines
+              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
+              .slice(0, 3);
+            if (extracted.length >= 2) {
+              challenges = extracted;
+            }
           }
+        } catch (error) {
+          console.error('AI generation error for 5w1h:', error);
+          // Keep default challenges on error
         }
 
         result = {
@@ -346,27 +389,33 @@ export async function POST(request: NextRequest) {
 
 テーマのみを3つ出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-
-        // Parse the response - extract challenges
         let challenges = defaultThemes.slice(0, 3);
-        const lines = text.split('\n').filter(line => line.trim());
 
-        const numberedList = lines
-          .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-          .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-          .filter(line => line.length > 3);
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
 
-        if (numberedList.length >= 3) {
-          challenges = numberedList.slice(0, 3);
-        } else {
-          const extracted = lines
-            .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-            .slice(0, 3);
-          if (extracted.length >= 2) {
-            challenges = extracted;
+          // Parse the response - extract challenges
+          const lines = text.split('\n').filter(line => line.trim());
+
+          const numberedList = lines
+            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
+            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
+            .filter(line => line.length > 3);
+
+          if (numberedList.length >= 3) {
+            challenges = numberedList.slice(0, 3);
+          } else {
+            const extracted = lines
+              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
+              .slice(0, 3);
+            if (extracted.length >= 2) {
+              challenges = extracted;
+            }
           }
+        } catch (error) {
+          console.error('AI generation error for prep:', error);
+          // Keep default challenges on error
         }
 
         result = {
@@ -407,27 +456,33 @@ export async function POST(request: NextRequest) {
 
 テーマのみを3つ出力してください。`;
 
-        const aiResult = await textModel.generateContent(prompt);
-        const text = aiResult.response.text().trim();
-
-        // Parse the response - extract challenges
         let challenges = defaultThemes.slice(0, 3);
-        const lines = text.split('\n').filter(line => line.trim());
 
-        const numberedList = lines
-          .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
-          .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
-          .filter(line => line.length > 3);
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
 
-        if (numberedList.length >= 3) {
-          challenges = numberedList.slice(0, 3);
-        } else {
-          const extracted = lines
-            .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
-            .slice(0, 3);
-          if (extracted.length >= 2) {
-            challenges = extracted;
+          // Parse the response - extract challenges
+          const lines = text.split('\n').filter(line => line.trim());
+
+          const numberedList = lines
+            .filter(line => /^\d+\.\s+/.test(line) || /^\d+、\s*/.test(line))
+            .map(line => line.replace(/^\d+[、.]\s*/, '').trim())
+            .filter(line => line.length > 3);
+
+          if (numberedList.length >= 3) {
+            challenges = numberedList.slice(0, 3);
+          } else {
+            const extracted = lines
+              .filter(line => !line.includes('出力形式') && !line.includes('条件') && line.length > 5 && line.length < 50)
+              .slice(0, 3);
+            if (extracted.length >= 2) {
+              challenges = extracted;
+            }
           }
+        } catch (error) {
+          console.error('AI generation error for fogcatcher:', error);
+          // Keep default challenges on error
         }
 
         result = {

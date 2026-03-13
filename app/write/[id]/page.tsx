@@ -415,7 +415,7 @@ export default function WritePage() {
             <div className="mt-6">
               <p className="text-sm text-muted-foreground mb-3">テーマを選んでください：</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {dynamicContent.challenges.map((challenge, index) => (
+                {dynamicContent?.challenges?.map((challenge, index) => (
                   <button
                     key={index}
                     onClick={() => handleSelectChallenge(challenge)}
