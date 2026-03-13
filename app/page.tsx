@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Flame, Target, Brain, Lightbulb, CheckCircle } from 'lucide-react';
+import { Home, Clock, Lightbulb, User, ArrowRight, Flame, BookOpen, Zap, FileText, Heart, HelpCircle, Sparkles, Leaf, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getDailyPrompt } from '@/lib/prompts';
 import { Prompt } from '@/types';
 
@@ -12,162 +11,261 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [totalEntries, setTotalEntries] = useState(0);
   const [todayPrompt, setTodayPrompt] = useState<Prompt | null>(null);
+  const [userLevel, setUserLevel] = useState(1);
+  const [userRank, setUserRank] = useState('言語化のアプレンティス');
 
   useEffect(() => {
     const savedStreak = localStorage.getItem('verbalize_streak');
     const savedTotal = localStorage.getItem('verbalize_total');
     if (savedStreak) setStreak(parseInt(savedStreak, 10));
     if (savedTotal) setTotalEntries(parseInt(savedTotal, 10));
+
+    // Calculate level based on total entries
+    const level = Math.floor(totalEntries / 10) + 1;
+    setUserLevel(level);
+
+    // Set rank based on level
+    const ranks = [
+      '言語化のアプレンティス',
+      '言葉の職人',
+      '思考の彫刻家',
+      '言語の錬金術師',
+      '意味の建築家',
+      '知性の詩人',
+      '真のマスター'
+    ];
+    setUserRank(ranks[Math.min(level - 1, ranks.length - 1)]);
+
     setTodayPrompt(getDailyPrompt());
-  }, []);
+  }, [totalEntries]);
+
+  const trainingCategories = [
+    {
+      id: 'instant',
+      title: '瞬発力トレーニング',
+      icon: Zap,
+      color: 'bg-amber-100 text-amber-700',
+      hover: 'hover:bg-amber-50 hover:border-amber-300'
+    },
+    {
+      id: 'logic',
+      title: 'ロジック構築',
+      icon: BookOpen,
+      color: 'bg-blue-100 text-blue-700',
+      hover: 'hover:bg-blue-50 hover:border-blue-300'
+    },
+    {
+      id: 'expression',
+      title: '表現力向上',
+      icon: Sparkles,
+      color: 'bg-purple-100 text-purple-700',
+      hover: 'hover:bg-purple-50 hover:border-purple-300'
+    },
+    {
+      id: 'summary',
+      title: '要約スキル',
+      icon: FileText,
+      color: 'bg-green-100 text-green-700',
+      hover: 'hover:bg-green-50 hover:border-green-300'
+    },
+    {
+      id: 'emotion',
+      title: '感情分析',
+      icon: Heart,
+      color: 'bg-rose-100 text-rose-700',
+      hover: 'hover:bg-rose-50 hover:border-rose-300'
+    },
+    {
+      id: 'empathy',
+      title: '共感力トレーニング',
+      icon: HelpCircle,
+      color: 'bg-teal-100 text-teal-700',
+      hover: 'hover:bg-teal-50 hover:border-teal-300'
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold tracking-tight">Verbalize</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-start justify-between">
+            <div>
+              {/* Decorative Header Element */}
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-24 h-6" viewBox="0 0 100 24" fill="none">
+                  <path d="M10 12 Q 25 4, 40 12 T 70 12 T 90 12" stroke="#8B7355" strokeWidth="1.5" fill="none"/>
+                </svg>
+                <Leaf className="w-4 h-4 text-primary" />
+                <Leaf className="w-3 h-3 text-primary" />
+                <Leaf className="w-4 h-4 text-primary" />
+              </div>
+              <h1 className="text-3xl lg:text-4xl font-serif font-semibold text-foreground tracking-tight">
+                Zero-Second Training
+              </h1>
+              <p className="text-muted-foreground mt-2 text-lg">
+                思考の刹那を、言葉に。
+              </p>
+            </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          <Card className="shadow-lg">
-            <CardContent className="p-6 flex items-center justify-center">
-              <Flame className="h-8 w-8 text-orange-500" />
+            {/* User Panel */}
+            <div className="vintage-card px-5 py-3 flex items-center gap-4">
               <div>
-                <span className="text-4xl font-bold">{streak}</span>
-                <span className="text-sm text-muted-foreground">連続記録日数</span>
+                <p className="text-sm text-muted-foreground">GOLIATH_USER</p>
+                <p className="font-semibold">LV.{userLevel} · {userRank}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg">
-            <CardContent className="p-6 flex items-center justify-center">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <span className="text-4xl font-bold">{totalEntries}</span>
-                <span className="text-sm text-muted-foreground">累計記録数</span>
+              <div className="vintage-icon-container primary">
+                <User className="w-5 h-5 text-background" />
               </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg">
-            <CardContent className="p-6 flex items-center justify-center">
-              <Target className="h-8 w-8 text-blue-500" />
-              <div>
-                <span className="text-4xl font-bold">5-10</span>
-                <span className="text-sm text-muted-foreground">分で完結</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </header>
+
+        {/* Today's Task */}
+        <div className="vintage-card p-6 lg:p-8 mb-8 slide-up">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="vintage-icon-container accent">
+              <Lightbulb className="w-5 h-5 text-background" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground uppercase tracking-wider">Today's Task</p>
+              <h2 className="text-xl font-serif font-semibold">
+                {todayPrompt?.title || 'Fog Catcher'}
+              </h2>
+            </div>
+          </div>
+
+          <div className="bg-input rounded-xl p-5 mb-6">
+            <p className="text-sm text-muted-foreground mb-2">お題：</p>
+            <p className="text-lg leading-relaxed">
+              {todayPrompt?.description || '人生における「無駄」の定義を言語化せよ。'}
+            </p>
+          </div>
+
+          <Link href={todayPrompt ? `/write/${todayPrompt.id}` : '/write/basic'}>
+            <Button className="vintage-button-primary w-full lg:w-auto min-w-[200px]">
+              トレーニングを開始
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
 
-        {/* Today's Prompt */}
-        {todayPrompt && (
-          <Card className="mb-8 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <Lightbulb className="h-6 w-6 text-amber-500" />
-                <CardTitle className="text-xl">今日のお題</CardTitle>
-                <CardDescription>毎日日替わりで出題されます</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg mb-4">{todayPrompt.title}</p>
-              <p className="text-muted-foreground">{todayPrompt.description}</p>
-              <Link href={`/write/${todayPrompt.id}`}>
-                <Button className="w-full">
-                  スタート
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="vintage-card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <Flame className="w-5 h-5 text-warning" />
+              <span className="text-sm text-muted-foreground">連続記録</span>
+            </div>
+            <p className="text-3xl font-serif font-semibold">{streak}<span className="text-base ml-1">日</span></p>
+          </div>
+
+          <div className="vintage-card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <CheckCircle className="w-5 h-5 text-success" />
+              <span className="text-sm text-muted-foreground">累計記録</span>
+            </div>
+            <p className="text-3xl font-serif font-semibold">{totalEntries}</p>
+          </div>
+
+          <div className="vintage-card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="text-sm text-muted-foreground">レベル</span>
+            </div>
+            <p className="text-3xl font-serif font-semibold">{userLevel}</p>
+          </div>
+
+          <div className="vintage-card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <Zap className="w-5 h-5 text-primary" />
+              <span className="text-sm text-muted-foreground">所要時間</span>
+            </div>
+            <p className="text-3xl font-serif font-semibold">5-10<span className="text-base ml-1">分</span></p>
+          </div>
+        </div>
 
         {/* Training Categories */}
-        <h2 className="text-2xl font-bold mb-6 text-center tracking-wide">トレーニングカテゴリー</h2>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <Link href="/write/basic">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-12 w-12 mb-4 flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-600">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-center text-white">基本編</h3>
-                <p className="text-center text-white/90">抽象を具体にする</p>
-                <div className="mt-4 flex justify-center">
-                  <ArrowRight className="h-6 w-6 text-white" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/write/emotion">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-12 w-12 mb-4 flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-600">
-                  <Brain className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-center text-white">思考・感情編</h3>
-                <p className="text-center text-white/90">感情と言語化</p>
-                <div className="mt-4 flex justify-center">
-                  <ArrowRight className="h-6 w-6 text-white" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/write/work">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-12 w-12 mb-4 flex items-center justify-center bg-gradient-to-br from-green-50 to-green-600">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-center text-white">仕事・ビジネス編</h3>
-                <p className="text-center text-white/90">実践的な言語化</p>
-                <div className="mt-4 flex justify-center">
-                  <ArrowRight className="h-6 w-6 text-white" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/write/abduction">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-12 w-12 mb-4 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-600">
-                  <Lightbulb className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-center text-white">仮説思考編</h3>
-                <p className="text-center text-white/90">アブダクション道場</p>
-                <div className="mt-4 flex justify-center">
-                  <ArrowRight className="h-6 w-6 text-white" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* Quick Start */}
-        <div className="mt-8">
-          <Card className="shadow-lg">
-            <CardContent className="p-6 text-center">
-              <p className="text-lg mb-4">クイックスタート</p>
-              <Link href={todayPrompt ? `/write/${todayPrompt.id}` : `/write/basic`}>
-                <Button className="bg-gradient-to-r from-blue-500 to-blue-700 w-full max-w-md">
-                  {todayPrompt ? '今日のお題に挑戦' : 'トレーニングを始める'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+        <div className="mb-8">
+          <h3 className="text-lg font-serif font-semibold mb-4 text-muted-foreground">
+            トレーニングカテゴリー
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {trainingCategories.map((category) => (
+              <Link key={category.id} href={`/write/${category.id}`}>
+                <button className={`
+                  w-full vintage-card p-4 flex items-center gap-3 transition-all duration-300
+                  ${category.hover}
+                `}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${category.color}`}>
+                    <category.icon className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm">{category.title}</span>
+                </button>
               </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Footer */}
-        <footer className="border-t mt-12 py-6">
-          <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground">
-            <p>Verbalize - 言語化トレーニングアプリ</p>
+            ))}
           </div>
-        </footer>
-      </main>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50">
+        <nav className="space-y-2">
+          <Link href="/">
+            <button className="vintage-sidebar-item active w-full">
+              <Home className="w-5 h-5" />
+              <span className="font-medium">HOME</span>
+            </button>
+          </Link>
+
+          <Link href="/history">
+            <button className="vintage-sidebar-item w-full">
+              <Clock className="w-5 h-5" />
+              <span className="font-medium">HISTORY</span>
+            </button>
+          </Link>
+
+          <Link href="/tips">
+            <button className="vintage-sidebar-item w-full">
+              <Lightbulb className="w-5 h-5" />
+              <span className="font-medium">TIPS</span>
+            </button>
+          </Link>
+
+          <Link href="/profile">
+            <button className="vintage-sidebar-item w-full">
+              <User className="w-5 h-5" />
+              <span className="font-medium">PROFILE</span>
+            </button>
+          </Link>
+        </nav>
+
+        {/* Bottom Actions */}
+        <div className="mt-8 pt-8 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-4 uppercase tracking-wider">Quick Actions</p>
+          <div className="space-y-2">
+            <Link href="/write/basic">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                基本トレーニング
+              </Button>
+            </Link>
+            <Link href="/write/abduction">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                仮説思考
+              </Button>
+            </Link>
+            <Link href="/write/emotion">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                感情分析
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
