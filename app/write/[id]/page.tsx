@@ -104,6 +104,31 @@ export default function WritePage() {
           description: result.description,
           imageUrl: result.imageUrl
         });
+      } else if (type === 'whysos' && result.question) {
+        setDynamicContent({
+          title: 'Why So（なぜなぜ分析）',
+          description: result.question
+        });
+      } else if (type === 'sowhat' && result.question) {
+        setDynamicContent({
+          title: 'So What?（つまり何？）',
+          description: result.question
+        });
+      } else if (type === '5w1h' && result.question) {
+        setDynamicContent({
+          title: '5W1H 展開',
+          description: result.question
+        });
+      } else if (type === 'prep' && result.question) {
+        setDynamicContent({
+          title: 'PREP法',
+          description: result.question
+        });
+      } else if (type === 'fogcatcher' && result.question) {
+        setDynamicContent({
+          title: 'Fog Catcher（思考の霧払い）',
+          description: result.question
+        });
       }
     } catch (error) {
       console.error('Failed to generate dynamic prompt:', error);

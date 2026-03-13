@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       concept?: string;
       description?: string;
       imageUrl?: string;
+      question?: string;
+      theme?: string;
     } | null = null;
 
     switch (type) {
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
         if (matches) {
           result = { word1: matches[1], word2: matches[2] };
         } else {
-          const words = text.split(/[「\n]/).filter(w => w && w !== '」').map(w => w.replace(/」/g, '').trim());
+          const words = text.split(/[\n]/).filter(w => w && w !== '」').map(w => w.replace(/」/g, '').trim());
           result = {
             word1: words[0] || 'コーヒー',
             word2: words[1] || '雲'
@@ -126,6 +128,72 @@ export async function POST(request: NextRequest) {
           console.error('Image generation failed:', error);
         }
 
+        break;
+      }
+
+      case 'whysos': {
+        const prompts = [
+          '最近感じた「イライラ」を原因から掘り下げて分析してください。日本語で3文以内。',
+          '最近感じた「不安」を原因から掘り下げて分析してください。日本語で3文以内。',
+          '最近直面した「課題」を原因から掘り下げて分析してください。日本語で3文以内。',
+          '最近成功したことと、その背後にある要因を分析してください。日本語で3文以内。',
+          '最近失敗したことと、その根本原因を分析してください。日本語で3文以内。'
+        ];
+        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const aiResult = await textModel.generateContent(selectedPrompt);
+        result = { question: aiResult.response.text().trim() };
+        break;
+      }
+
+      case 'sowhat': {
+        const prompts = [
+          '「最近読んだニュース」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
+          '「最近の仕事での出来事」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
+          '「最近の友人との会話」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
+          '「最近の失敗体験」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。'
+        ];
+        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const aiResult = await textModel.generateContent(selectedPrompt);
+        result = { question: aiResult.response.text().trim() };
+        break;
+      }
+
+      case '5w1h': {
+        const prompts = [
+          '最近の「買い物」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
+          '最近の「会議」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
+          '最近の「旅行」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
+          '最近の「トラブル解決」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。'
+        ];
+        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const aiResult = await textModel.generateContent(selectedPrompt);
+        result = { question: aiResult.response.text().trim() };
+        break;
+      }
+
+      case 'prep': {
+        const prompts = [
+          '「リモートワークのメリット」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
+          '「朝活の重要性」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
+          '「時間管理の重要性」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
+          '「継続の力」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。'
+        ];
+        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const aiResult = await textModel.generateContent(selectedPrompt);
+        result = { question: aiResult.response.text().trim() };
+        break;
+      }
+
+      case 'fogcatcher': {
+        const prompts = [
+          '今の頭の中にある「ぼんやりとした悩み」をそのまま言語化して書き出してください。日本語で3文以内。',
+          '今の頭の中にある「漠然とした不安」をそのまま言語化して書き出してください。日本語で3文以内。',
+          '今の頭の中にある「モヤモヤした感情」をそのまま言語化して書き出してください。日本語で3文以内。',
+          '今の頭の中にある「言いにくい思い」をそのまま言語化して書き出してください。日本語で3文以内。'
+        ];
+        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const aiResult = await textModel.generateContent(selectedPrompt);
+        result = { question: aiResult.response.text().trim() };
         break;
       }
 
