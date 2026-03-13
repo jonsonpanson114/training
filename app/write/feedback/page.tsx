@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, TrendingUp, Lightbulb, ArrowRight, Loader2, Sparkles } from 'lucide-react';
@@ -20,10 +20,8 @@ interface Entry {
   createdAt: string;
 }
 
-export default function FeedbackPage() {
-  const searchParams = useSearchParams();
+function FeedbackContent({ entryId }: { entryId: string | null }) {
   const router = useRouter();
-  const entryId = searchParams.get('entryId');
 
   const [entry, setEntry] = useState<Entry | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -89,6 +87,96 @@ export default function FeedbackPage() {
   }
 
   return (
+    <>
+      {/* Success Animation */}
+      {showConfetti && (
+        <div className="text-center mb-8 animate-bounce">
+          <CheckCircle className="h-20 w-20 mx-auto text-green-500" />
+          <p className="text-2xl font-bold mt-4 text-green-600 dark:text-green-400">完了！</p>
+        </div>
+      )}
+
+      {/* Score Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-blue-500" />
+            スコア
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center">
+            <div className="text-6xl font-bold mb-2">{feedback?.score || 70}</div>
+            <div className="text-muted-foreground">/ 100点</div>
+            <Progress value={feedback?.score || 70} className="mt-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Feedback Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="h-6 w-6 text-yellow-500" />
+            フィードバック
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-base leading-relaxed">{feedback?.feedback}</p>
+        </CardContent>
+      </Card>
+
+      {/* Suggestions Card */}
+      {feedback?.suggestions && feedback.suggestions.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-purple-500" />
+              改善の提案
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {feedback.suggestions.map((suggestion, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
+                  <span className="text-sm">{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Entry Summary */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>あなたの回答</CardTitle>
+          <CardDescription>{entry.promptTitle}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
+          {entry.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {entry.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Continue Button */}
+      <Button onClick={handleContinue} size="lg" className="w-full">
+        次のお題に進む
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </>
+  );
+}
+
+export default function FeedbackPage() {
+  return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
@@ -103,90 +191,16 @@ export default function FeedbackPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Success Animation */}
-        {showConfetti && (
-          <div className="text-center mb-8 animate-bounce">
-            <CheckCircle className="h-20 w-20 mx-auto text-green-500" />
-            <p className="text-2xl font-bold mt-4 text-green-600 dark:text-green-400">完了！</p>
-          </div>
-        )}
-
-        {/* Score Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-blue-500" />
-              スコア
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-6xl font-bold mb-2">{feedback?.score || 70}</div>
-              <div className="text-muted-foreground">/ 100点</div>
-              <Progress value={feedback?.score || 70} className="mt-4" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Feedback Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-6 w-6 text-yellow-500" />
-              フィードバック
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base leading-relaxed">{feedback?.feedback}</p>
-          </CardContent>
-        </Card>
-
-        {/* Suggestions Card */}
-        {feedback?.suggestions && feedback.suggestions.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-purple-500" />
-                改善の提案
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {feedback.suggestions.map((suggestion, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
-                    <span className="text-sm">{suggestion}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Entry Summary */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>あなたの回答</CardTitle>
-            <CardDescription>{entry.promptTitle}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
-            {entry.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {entry.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Continue Button */}
-        <Button onClick={handleContinue} size="lg" className="w-full">
-          次のお題に進む
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+        <Suspense fallback={<div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+          <FeedbackSearchParamsWrapper />
+        </Suspense>
       </main>
     </div>
   );
+}
+
+function FeedbackSearchParamsWrapper() {
+  const searchParams = useSearchParams();
+  const entryId = searchParams.get('entryId');
+  return <FeedbackContent entryId={entryId} />;
 }
