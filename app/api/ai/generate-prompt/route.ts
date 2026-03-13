@@ -443,9 +443,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!result) {
+      console.error('Result is null for type:', type);
       return NextResponse.json({ error: 'Failed to generate' }, { status: 500 });
     }
 
+    console.log('API returning result for type', type, ':', result);
     return NextResponse.json(result);
   } catch (error) {
     console.error('AI generation error:', error);

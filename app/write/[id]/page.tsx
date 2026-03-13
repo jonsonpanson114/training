@@ -108,6 +108,7 @@ export default function WritePage() {
       if (!response.ok) throw new Error('Failed to generate prompt');
 
       const result = await response.json();
+      console.log('API response received:', result);
 
       if (type === 'abduction') {
         setDynamicContent({
@@ -131,6 +132,7 @@ export default function WritePage() {
           imageUrl: result.imageUrl
         });
       } else if (type === 'whysos') {
+        console.log('Setting whysos content with result:', result);
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
           description: result.question || result.challenges?.[0] || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
@@ -400,7 +402,16 @@ export default function WritePage() {
           )}
 
           {/* Challenge Selector for training types with challenges */}
-          {showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1 && (
+          {(() => {
+            console.log('Challenges check:', {
+              showChallenges,
+              hasChallenges: !!dynamicContent?.challenges,
+              challengesLength: dynamicContent?.challenges?.length || 0,
+              challenges: dynamicContent?.challenges,
+              condition: showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1
+            });
+            return showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1;
+          })() && (
             <div className="mt-6">
               <p className="text-sm text-muted-foreground mb-3">テーマを選んでください：</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
