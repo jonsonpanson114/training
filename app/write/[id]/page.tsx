@@ -86,13 +86,13 @@ export default function WritePage() {
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft]);
 
-  // Initialize step inputs when steps are available (only if not already initialized)
+  // Initialize step inputs when steps are available
   useEffect(() => {
-    if (dynamicContent?.steps && stepInputs.length === 0) {
+    if (dynamicContent?.steps && dynamicContent.steps.length > 0) {
       setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
       setCurrentStep(0);
     }
-  }, [dynamicContent?.steps]);
+  }, [dynamicContent?.steps, dynamicContent?.question]);
 
   const generateDynamicPrompt = async (type: string) => {
     setIsGenerating(true);
@@ -201,13 +201,12 @@ export default function WritePage() {
     }
   };
 
-  const handleRegeneratePrompt = () => {
+  const handleRegeneratePrompt = async () => {
     // Reset and generate new prompt
     if (dynamicPrompts[id]) {
-      setIsGenerating(true);
-      generateDynamicPrompt(id);
-      setStepInputs([]);
-      setCurrentStep(0);
+      setIsCustomTheme(false);
+      setCustomTheme('');
+      await generateDynamicPrompt(id);
     }
   };
 
@@ -216,11 +215,7 @@ export default function WritePage() {
       setDynamicContent(prev => prev ? { ...prev, question: customTheme } : null);
       setIsCustomTheme(true);
       setShowThemeInput(false);
-      // Reinitialize steps with custom theme
-      if (dynamicContent?.steps) {
-        setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
-        setCurrentStep(0);
-      }
+      // Steps will be reinitialized by useEffect when question changes
     }
   };
 
