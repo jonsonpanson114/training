@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,9 @@ export default function WritePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCustomTheme, setIsCustomTheme] = useState(false);
+  const [customTheme, setCustomTheme] = useState('');
+  const [showThemeInput, setShowThemeInput] = useState(false);
 
   useEffect(() => {
     if (dynamicPrompts[id]) {
@@ -83,9 +86,9 @@ export default function WritePage() {
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft]);
 
-  // Initialize step inputs when steps are available
+  // Initialize step inputs when steps are available (only if not already initialized)
   useEffect(() => {
-    if (dynamicContent?.steps) {
+    if (dynamicContent?.steps && stepInputs.length === 0) {
       setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
       setCurrentStep(0);
     }
@@ -196,6 +199,34 @@ export default function WritePage() {
     if (currentStep < stepInputs.length - 1) {
       setCurrentStep(currentStep + 1);
     }
+  };
+
+  const handleRegeneratePrompt = () => {
+    // Reset and generate new prompt
+    if (dynamicPrompts[id]) {
+      setIsGenerating(true);
+      generateDynamicPrompt(id);
+      setStepInputs([]);
+      setCurrentStep(0);
+    }
+  };
+
+  const handleUseCustomTheme = () => {
+    if (customTheme.trim()) {
+      setDynamicContent(prev => prev ? { ...prev, question: customTheme } : null);
+      setIsCustomTheme(true);
+      setShowThemeInput(false);
+      // Reinitialize steps with custom theme
+      if (dynamicContent?.steps) {
+        setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
+        setCurrentStep(0);
+      }
+    }
+  };
+
+  const handleResetToAIGenerated = () => {
+    setIsCustomTheme(false);
+    handleRegeneratePrompt();
   };
 
   const handleSubmit = async () => {
@@ -327,6 +358,69 @@ export default function WritePage() {
           {dynamicContent?.imageUrl && (
             <div className="mt-6 rounded-2xl overflow-hidden border border-border">
               <img src={dynamicContent.imageUrl} alt="Abduction Lens" className="w-full" />
+            </div>
+          )}
+
+          {/* Theme Controls for Dynamic Prompts */}
+          {dynamicPrompts[id] && ['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={handleRegeneratePrompt}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-accent/50 hover:border-accent hover:bg-accent/10"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  新しいお題を生成
+                </Button>
+                <Button
+                  onClick={() => setShowThemeInput(!showThemeInput)}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  自分のテーマを使う
+                </Button>
+                {isCustomTheme && (
+                  <Button
+                    onClick={handleResetToAIGenerated}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    AIお題に戻る
+                  </Button>
+                )}
+              </div>
+
+              {/* Custom Theme Input */}
+              {showThemeInput && (
+                <div className="mt-4 p-4 bg-input rounded-xl border border-border">
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    自分のテーマ（議題）を入力
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={customTheme}
+                      onChange={(e) => setCustomTheme(e.target.value)}
+                      placeholder="例：最近気になっていること、悩み、議論したいテーマなど"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleUseCustomTheme}
+                      disabled={!customTheme.trim()}
+                      className="vintage-button-primary"
+                    >
+                      適用
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ※ 自分のテーマを設定すると、そのテーマについてトレーニングを行います
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
