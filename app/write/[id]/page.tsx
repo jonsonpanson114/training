@@ -107,55 +107,79 @@ export default function WritePage() {
 
       const result = await response.json();
 
-      if (type === 'abduction' && result.phenomenon) {
+      if (type === 'abduction') {
         setDynamicContent({
           title: 'アブダクション道場',
-          description: result.phenomenon
+          description: result.phenomenon || '奇妙な現象に対して、考えられる仮説を3つ挙げてください'
         });
-      } else if (type === 'synapse' && result.word1 && result.word2) {
+      } else if (type === 'synapse') {
         setDynamicContent({
           title: 'Synapse Match',
-          description: `「${result.word1}」と「${result.word2}」の共通点を10個見つけてください`
+          description: `「${result.word1 || 'コーヒー'}」と「${result.word2 || '雲'}」の共通点を10個見つけてください`
         });
-      } else if (type === 'metaphor' && result.concept) {
+      } else if (type === 'metaphor') {
         setDynamicContent({
           title: 'Metaphor Maker',
-          description: `「${result.concept}」をバカでもわかる例え話で説明してください`
+          description: `「${result.concept || 'ブロックチェーン'}」をバカでもわかる例え話で説明してください`
         });
-      } else if (type === 'abduction-lens' && result.description) {
+      } else if (type === 'abduction-lens') {
         setDynamicContent({
           title: 'Abduction Lens',
-          description: result.description,
+          description: result.description || '決定的瞬間のシーンに対して、観察事実と仮説を記述してください',
           imageUrl: result.imageUrl
         });
-      } else if (type === 'whysos' && result.question) {
+      } else if (type === 'whysos') {
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
-          description: result.question,
-          steps: result.steps
+          description: result.question || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
+          steps: result.steps || [
+            { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
+            { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
+            { step: 3, label: '3回目「なぜ？」', placeholder: '根本原因に近づけてください（20〜40文字）' },
+            { step: 4, label: '4回目「なぜ？」', placeholder: 'もっと深く掘り下げてください（20〜40文字）' },
+            { step: 5, label: '5回目「なぜ？」', placeholder: '根本原因を明確にしてください（20〜40文字）' }
+          ]
         });
-      } else if (type === 'sowhat' && result.question) {
+      } else if (type === 'sowhat') {
         setDynamicContent({
           title: 'So What?（つまり何？）',
-          description: result.question,
-          steps: result.steps
+          description: result.question || '最近読んだニュースの本質を「つまり何？」で掘り下げてください。',
+          steps: result.steps || [
+            { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
+            { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
+            { step: 3, label: '3回目「つまり何？」', placeholder: '抽象度を上げて考えてください（20〜40文字）' },
+            { step: 4, label: '4回目「つまり何？」', placeholder: '行動可能な教訓を考えてください（20〜40文字）' },
+            { step: 5, label: '5回目「つまり何？」', placeholder: '本質的な洞察をまとめてください（20〜40文字）' }
+          ]
         });
-      } else if (type === '5w1h' && result.question) {
+      } else if (type === '5w1h') {
         setDynamicContent({
           title: '5W1H 展開',
-          description: result.question,
-          steps: result.steps
+          description: result.question || '最近の買い物について5W1Hで整理して行動プランを作成してください。',
+          steps: result.steps || [
+            { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
+            { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
+            { step: 3, label: 'Who（誰）', placeholder: '誰が関わっていましたか？（10〜20文字）' },
+            { step: 4, label: 'What（何）', placeholder: '何が起こりましたか？（10〜20文字）' },
+            { step: 5, label: 'Why（なぜ）', placeholder: 'なぜ起こりましたか？（10〜20文字）' },
+            { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
+          ]
         });
-      } else if (type === 'prep' && result.question) {
+      } else if (type === 'prep') {
         setDynamicContent({
           title: 'PREP法',
-          description: result.question,
-          steps: result.steps
+          description: result.question || 'リモートワークのメリットをPREP法で伝えてください。',
+          steps: result.steps || [
+            { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
+            { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
+            { step: 3, label: 'Example（具体例）', placeholder: '具体例を挙げてください（20〜40文字）' },
+            { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
+          ]
         });
-      } else if (type === 'fogcatcher' && result.question) {
+      } else if (type === 'fogcatcher') {
         setDynamicContent(prev => ({
           title: 'Fog Catcher（思考の霧払い）',
-          description: prev?.description || result.description || result.question,
+          description: result.description || prev?.description || '思考や感情を制限なしで自由に書き出してください。',
           question: result.question
         }));
       }
