@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Clock, Lightbulb, User, ArrowRight, Flame, BookOpen, Zap, FileText, Heart, HelpCircle, Sparkles, Leaf, CheckCircle } from 'lucide-react';
+import { Home, Clock, Lightbulb, User, ArrowRight, Flame, BookOpen, Zap, FileText, Heart, HelpCircle, Sparkles, Leaf, CheckCircle, Lightbulb as Bulb, Puzzle, Brain, Search, Target, List, Infinity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getDailyPrompt } from '@/lib/prompts';
 import { Prompt } from '@/types';
@@ -43,47 +43,109 @@ export default function HomePage() {
   }, [totalEntries]);
 
   const trainingCategories = [
+    // Basic Training
     {
-      id: 'instant',
-      title: '瞬発力トレーニング',
-      icon: Zap,
-      color: 'bg-amber-100 text-amber-700',
-      hover: 'hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg hover:-translate-y-0.5'
-    },
-    {
-      id: 'logic',
-      title: 'ロジック構築',
+      id: 'basic',
+      title: '基本トレーニング',
       icon: BookOpen,
       color: 'bg-blue-100 text-blue-700',
-      hover: 'hover:bg-blue-50 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5'
+      hover: 'hover:bg-blue-50 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '30問'
+    },
+    // AI-Generated Training (The Important Ones!)
+    {
+      id: 'abduction',
+      title: 'アブダクション道場',
+      icon: Puzzle,
+      color: 'bg-amber-100 text-amber-700',
+      hover: 'hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: 'AI生成',
+      highlighted: true
     },
     {
-      id: 'expression',
-      title: '表現力向上',
-      icon: Sparkles,
+      id: 'synapse',
+      title: 'Synapse Match',
+      icon: Infinity,
       color: 'bg-purple-100 text-purple-700',
-      hover: 'hover:bg-purple-50 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5'
+      hover: 'hover:bg-purple-50 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: 'AI生成',
+      highlighted: true
     },
     {
-      id: 'summary',
-      title: '要約スキル',
-      icon: FileText,
-      color: 'bg-green-100 text-green-700',
-      hover: 'hover:bg-green-50 hover:border-green-300 hover:shadow-lg hover:-translate-y-0.5'
+      id: 'metaphor',
+      title: 'Metaphor Maker',
+      icon: Sparkles,
+      color: 'bg-pink-100 text-pink-700',
+      hover: 'hover:bg-pink-50 hover:border-pink-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: 'AI生成',
+      highlighted: true
     },
+    {
+      id: 'abduction-lens',
+      title: 'Abduction Lens',
+      icon: Search,
+      color: 'bg-indigo-100 text-indigo-700',
+      hover: 'hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: 'AI生成',
+      highlighted: true
+    },
+    // Thinking Training
+    {
+      id: 'whysos',
+      title: 'Why So',
+      icon: Lightbulb,
+      color: 'bg-orange-100 text-orange-700',
+      hover: 'hover:bg-orange-50 hover:border-orange-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '5回'
+    },
+    {
+      id: 'sowhat',
+      title: 'So What?',
+      icon: Target,
+      color: 'bg-red-100 text-red-700',
+      hover: 'hover:bg-red-50 hover:border-red-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '思考整理'
+    },
+    {
+      id: '5w1h',
+      title: '5W1H',
+      icon: List,
+      color: 'bg-teal-100 text-teal-700',
+      hover: 'hover:bg-teal-50 hover:border-teal-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '6要素'
+    },
+    {
+      id: 'prep',
+      title: 'PREP法',
+      icon: Brain,
+      color: 'bg-cyan-100 text-cyan-700',
+      hover: 'hover:bg-cyan-50 hover:border-cyan-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '伝え方'
+    },
+    // Other Categories
     {
       id: 'emotion',
       title: '感情分析',
       icon: Heart,
       color: 'bg-rose-100 text-rose-700',
-      hover: 'hover:bg-rose-50 hover:border-rose-300 hover:shadow-lg hover:-translate-y-0.5'
+      hover: 'hover:bg-rose-50 hover:border-rose-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '10問'
     },
     {
-      id: 'empathy',
-      title: '共感力トレーニング',
+      id: 'work',
+      title: 'ビジネストレーニング',
+      icon: FileText,
+      color: 'bg-green-100 text-green-700',
+      hover: 'hover:bg-green-50 hover:border-green-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '10問'
+    },
+    {
+      id: 'fogcatcher',
+      title: 'Fog Catcher',
       icon: HelpCircle,
-      color: 'bg-teal-100 text-teal-700',
-      hover: 'hover:bg-teal-50 hover:border-teal-300 hover:shadow-lg hover:-translate-y-0.5'
+      color: 'bg-violet-100 text-violet-700',
+      hover: 'hover:bg-violet-50 hover:border-violet-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: 'フリーライト'
     }
   ];
 
@@ -209,20 +271,38 @@ export default function HomePage() {
 
         {/* Training Categories */}
         <div className={`mb-8 ${showGreeting ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.3s' }}>
-          <h3 className="text-lg font-serif font-semibold mb-4 text-muted-foreground">
-            トレーニングカテゴリー
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-lg font-serif font-semibold text-muted-foreground">
+              トレーニングカテゴリー
+            </h3>
+            {/* AI Generated Badge */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/20 text-accent text-xs">
+              <Sparkles className="w-3 h-3" />
+              <span>AI生成</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {trainingCategories.map((category, index) => (
               <Link key={category.id} href={`/write/${category.id}`}>
                 <button className={`
-                  w-full vintage-card p-4 flex items-center gap-3 transition-all duration-300
+                  w-full vintage-card p-4 flex items-center gap-3 transition-all duration-300 relative
                   ${category.hover}
+                  ${category.highlighted ? 'border-accent border-2 bg-accent/5' : ''}
                 `} style={{ animationDelay: `${0.4 + index * 0.05}s` }}>
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${category.color} transition-transform duration-300 hover:scale-110`}>
-                    <category.icon className="w-5 h-5" />
+                  {category.highlighted && (
+                    <div className="absolute -top-2 -right-2">
+                      <Sparkles className="w-5 h-5 text-accent animate-pulse" />
+                    </div>
+                  )}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${category.color} transition-transform duration-300 hover:scale-110 shadow-sm`}>
+                    <category.icon className="w-6 h-6" />
                   </div>
-                  <span className="font-medium text-sm">{category.title}</span>
+                  <div className="flex-1 text-left">
+                    <span className="font-medium text-sm block">{category.title}</span>
+                    {category.badge && (
+                      <span className="text-xs text-muted-foreground block mt-0.5">{category.badge}</span>
+                    )}
+                  </div>
                 </button>
               </Link>
             ))}
@@ -273,18 +353,35 @@ export default function HomePage() {
 
         {/* Bottom Actions */}
         <div className="mt-8 pt-8 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-4 uppercase tracking-wider">Quick Actions</p>
+          <div className="flex items-center gap-2 mb-4">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Quick Actions</p>
+            <Sparkles className="w-3 h-3 text-accent" />
+          </div>
           <div className="space-y-2">
+            {/* AI Generated - Highlighted */}
+            <Link href="/write/abduction">
+              <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                アブダクション道場
+              </Button>
+            </Link>
+            <Link href="/write/synapse">
+              <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                Synapse Match
+              </Button>
+            </Link>
+            <Link href="/write/metaphor">
+              <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                Metaphor Maker
+              </Button>
+            </Link>
+            {/* Other */}
             <Link href="/write/basic">
               <Button variant="outline" className="w-full justify-start text-sm group">
                 <ArrowRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
                 基本トレーニング
-              </Button>
-            </Link>
-            <Link href="/write/abduction">
-              <Button variant="outline" className="w-full justify-start text-sm group">
-                <ArrowRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
-                仮説思考
               </Button>
             </Link>
             <Link href="/write/emotion">
