@@ -115,12 +115,12 @@ export default function WritePage() {
       } else if (type === 'synapse') {
         setDynamicContent({
           title: 'Synapse Match',
-          description: `「${result.word1 || 'コーヒー'}」と「${result.word2 || '雲'}」の共通点を10個見つけてください`
+          description: `${result.word1 || 'コーヒー'}と${result.word2 || '雲'}の共通点を10個見つけてください`
         });
       } else if (type === 'metaphor') {
         setDynamicContent({
           title: 'Metaphor Maker',
-          description: `「${result.concept || 'ブロックチェーン'}」をバカでもわかる例え話で説明してください`
+          description: `${result.concept || 'ブロックチェーン'}をバカでもわかる例え話で説明してください`
         });
       } else if (type === 'abduction-lens') {
         setDynamicContent({
