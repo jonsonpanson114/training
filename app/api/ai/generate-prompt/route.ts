@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
           result = { phenomenon: aiResult.response.text().trim() };
         } catch (error) {
           console.error('AI generation error for abduction:', error);
-          // Fallback to default phenomenon
           result = {
             phenomenon: 'オフィスの全員がサングラスをかけてキーボードを猛烈に叩いているがPCの電源はすべて落ちている'
           };
@@ -88,7 +87,6 @@ export async function POST(request: NextRequest) {
           }
         } catch (error) {
           console.error('AI generation error for synapse:', error);
-          // Fallback to default words
           result = {
             word1: 'コーヒー',
             word2: '雲'
@@ -128,13 +126,9 @@ export async function POST(request: NextRequest) {
           const description = aiResult.response.text().trim();
           result = { description };
 
-          // Generate image
           try {
             const imagePrompt = `Photorealistic scene: ${description}. Cinematic lighting, mysterious atmosphere, high detail, 4K quality.`;
-            const imageResult = await imageModel.generateContent([
-              { text: imagePrompt }
-            ]);
-
+            const imageResult = await imageModel.generateContent([{ text: imagePrompt }]);
             const imageData = imageResult.response.candidates?.[0]?.content?.parts?.[0];
             if (imageData && 'inlineData' in imageData) {
               const base64Data = imageData.inlineData?.data;
@@ -148,12 +142,10 @@ export async function POST(request: NextRequest) {
           }
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);
-          // Fallback to default scene
           result = {
             description: '公園のベンチに置き去られた高級なハンドバッグ。周囲には誰もおらず、風が強く吹き抜けている'
           };
         }
-
         break;
       }
 
@@ -254,26 +246,25 @@ export async function POST(request: NextRequest) {
       }
 
       case '5w1h': {
-        const prompt = `5W1H分析のための、あえて整理されていない「情報の多い生っぽい文章」を3つ提案してください。
+        const prompt = `5W1H分析のための、非常に長くて情報が入り乱れた「未整理の長文」を1つだけ提案してください。
 
 出力は以下のJSON形式のみにしてください：
 {
-  "prompts": ["文章1", "文章2", "文章3"]
+  "prompts": ["非常に長い文章"]
 }
 
 条件：
-- 150〜250文字程度の長めの文章にすること
-- 情報が時系列でなかったり、余計な主観や細かい描写が混じっていたりする「整理しがいのある」内容にすること
-- 6つの要素（When, Where, Who, What, Why, How）が文中に散りばめられており、それをユーザーが拾い集めて整理する形にすること
-- 臨場感があり、ビジネスや日常での「よくある報告漏れや混乱した説明」をイメージすること
+- 400〜600文字程度の重厚な文章にすること
+- 話の筋が何度も横道に逸れたり、話し手の個人的な感想や細かい状況描写、無関係なノイズ情報が大量に含まれていること
+- 5W1H（いつ、どこで、誰が、何を、なぜ、どのように）の要素が、文章のあちこちに断片的に散らばっていること
+- 読んだ瞬間に「うわっ、長いし分かりにくいな」と思わせる「整理しがいのある」内容にすること
+- ビジネスのトラブル報告、あるいは非常に複雑な事件の目撃証言のようなシチュエーションをイメージすること
 
 例：
-「えーと、昨日の夕方なんですけど、あ、会議のあとだから17時過ぎかな、駅前のスタバでクライアントの佐藤さんと急遽会うことになって。実は例のプロジェクトの予算の件で、あちらの社長からちょっとストップがかかっちゃったみたいで……あ、コーヒーこぼしそうになった。それで、佐藤さんが言うには、もっとコストを抑える案を週明けまでに提示してほしいらしいんです。今は必死に代わりのプランを練っているところで、Slackでメンバーにも共有して協力をお願いしている最中なんですけど、かなりバタバタしています。」`;
+「いや、本当に参りましたよ。実は今日の午後、あ、正確には昼食を済ませてからだから13時半くらいのことだったかな……」から始まり、余計な描写（コーヒーの味、天候、過去の愚ぐ痴など）を交えつつ、最終的に重要な5W1Hを抽出させる。`;
 
         let prompts = [
-          'そういえば、先週の金曜日の昼下がりだったと思うけど、公園の近くの第2会議室で例のウェブサイトのリニューアル案について部長が怒鳴り込んできて大変だったんだ。デザインが古臭いっていういつもの文句なんだけど、要はもっと若手層を取り込みたいっていうのが本音らしくて。僕たちは昨日から急いでコンセプトを練り直して、競合を分析するための資料をひたすら集めて。まあ最終的にはプレゼンで納得してもらうしかないんだけど、明日の朝までに修正版を出さなきゃいけないから、今はチーム全員で徹夜覚悟で作業してるよ。',
-          '今日、お昼休みを返上で対応してたんだけど、駅ビルの3階にあるショールームで展示してた試作品が壊れてるのが見つかって。たまたま通りかかった清掃員の方が11時頃に教えてくれたんだけど、どうも週末のイベントで誰かが無理に動かしたのが原因みたい。慌てて技術チームを呼び出して、なんとか応急処置をしてもらったんだけど、このままだと週末の本番に間に合わないから、特急便で予備のパーツを工場から手配することにしたんだ。現場はもうパニック状態で、あちこち電話をかけまくって大変な一日だったよ。',
-          '実は一昨日、営業の帰りにふらっと立ち寄った取引先のオフィスで、新しい担当者の高橋さんと名刺交換した時に発覚したんだけど。来月予定してる新商品発表会の会場、実はまだ確定してなかったんだよね。運営側の連絡ミスでダブルブッキングしてたみたいで、高橋さんが青い顔して教えてくれて。急いで近隣のホテルを片っ端から当たって、なんとか空いてた駅前のホールを仮押さえしたよ。費用が少し予算オーバーしそうだから、宣伝費を削る方向でこれから役員を説得しなきゃいけないんだ。いやあ、あの時寄っていなかったらと思うとゾッとするよ。'
+          'ええと、お疲れ様です。実は今さっき報告が入ったんですけど、例の新製品の発表イベント、来週の月曜にあるじゃないですか。銀座のメインホールでやるやつです。あそこで使う予定だった巨大なデジタルサイネージ、さっき設営チームの田中くんから電話があって、どうも運搬中にトラックが急ブレーキを踏んだ拍子に固定が外れて、画面が派手に割れちゃったらしいんですよ。田中くんもかなり動揺してて、説明がしどろもどろだったんですけど。そもそも今回のイベント、去年の実績を上回るために予算もかなりつぎ込んでて、役員も期待してるわけじゃないですか。僕も昨日はその準備で徹夜気味で、さっきまでデスクで少し意識が飛んでたくらいなんですけど。それで、代替品を探そうにも、あのサイズの特注モニターって今国内に在庫がほとんどないらしくて。田中くんが知り合いの業者を片っ端から当たってくれてるんですけど、今のところ最速でも火曜日着になっちゃうみたいで。でも月曜の朝一にはリハーサルが始まるし、広報ももう各メディアに案内を送っちゃってるから、簡単に延期もできないですよね……。それで今、急遽展示内容をパネル形式に差し替えるか、あるいはプロジェクターで代用できないか検討してるんですが、機材の手配を夕方までに確定させないと、設営スケジュールが完全に崩壊しちゃうんです。もう、本当にどこで誰がミスしたのか突き止めたい気分ですけど、今は高橋部長をどう説得するかが一番の懸念事項で……。'
         ];
 
         try {
@@ -283,7 +274,7 @@ export async function POST(request: NextRequest) {
           if (jsonMatch) {
             const data = JSON.parse(jsonMatch[0]);
             if (data.prompts && Array.isArray(data.prompts)) {
-              prompts = data.prompts.slice(0, 3);
+              prompts = data.prompts.slice(0, 1);
             }
           }
         } catch (error) {
@@ -401,7 +392,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to generate' }, { status: 500 });
     }
 
-    console.log('API returning result for type', type, ':', result);
     return NextResponse.json(result);
   } catch (error) {
     console.error('AI generation error:', error);
