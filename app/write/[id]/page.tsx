@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,13 +13,25 @@ import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { LuxuryTimer } from '@/components/luxury/LuxuryTimer';
 import { LuxuryInputArea } from '@/components/luxury/LuxuryInputArea';
 
+interface StepInput {
+  step: number;
+  answer: string;
+}
+
 export default function WritePage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
   const [prompt, setPrompt] = useState<Prompt | null>(null);
-  const [dynamicContent, setDynamicContent] = useState<{ title: string; description: string; imageUrl?: string } | null>(null);
+  const [dynamicContent, setDynamicContent] = useState<{
+    title: string;
+    description: string;
+    imageUrl?: string;
+    question?: string;
+    steps?: Array<{ step: number; label: string; placeholder: string }>;
+  } | null>(null);
+  const [stepInputs, setStepInputs] = useState<StepInput[]>([]);
   const [content, setContent] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -28,6 +40,7 @@ export default function WritePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     if (dynamicPrompts[id]) {
@@ -70,6 +83,14 @@ export default function WritePage() {
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft]);
 
+  // Initialize step inputs when steps are available
+  useEffect(() => {
+    if (dynamicContent?.steps) {
+      setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
+      setCurrentStep(0);
+    }
+  }, [dynamicContent?.steps]);
+
   const generateDynamicPrompt = async (type: string) => {
     setIsGenerating(true);
     try {
@@ -107,22 +128,26 @@ export default function WritePage() {
       } else if (type === 'whysos' && result.question) {
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
-          description: result.question
+          description: result.question,
+          steps: result.steps
         });
       } else if (type === 'sowhat' && result.question) {
         setDynamicContent({
           title: 'So What?（つまり何？）',
-          description: result.question
+          description: result.question,
+          steps: result.steps
         });
       } else if (type === '5w1h' && result.question) {
         setDynamicContent({
           title: '5W1H 展開',
-          description: result.question
+          description: result.question,
+          steps: result.steps
         });
       } else if (type === 'prep' && result.question) {
         setDynamicContent({
           title: 'PREP法',
-          description: result.question
+          description: result.question,
+          steps: result.steps
         });
       } else if (type === 'fogcatcher' && result.question) {
         setDynamicContent({
@@ -137,6 +162,19 @@ export default function WritePage() {
     }
   };
 
+  const handleStart = () => {
+    setIsTimerRunning(true);
+  };
+
+  const handleReset = () => {
+    setTimeLeft(totalTime);
+    setIsTimerRunning(false);
+    if (dynamicContent?.steps) {
+      setStepInputs(dynamicContent.steps.map(step => ({ step: step.step, answer: '' })));
+      setCurrentStep(0);
+    }
+  };
+
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
@@ -146,6 +184,18 @@ export default function WritePage() {
 
   const handleRemoveTag = (tag: string) => {
     setTags(tags.filter(t => t !== tag));
+  };
+
+  const handleStepInput = (stepIndex: number, value: string) => {
+    const updated = [...stepInputs];
+    updated[stepIndex].answer = value;
+    setStepInputs(updated);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < stepInputs.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const handleSubmit = async () => {
@@ -192,6 +242,20 @@ export default function WritePage() {
     router.push(`/write/feedback?entryId=${newEntry.id}`);
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Combine content from step inputs
+  useEffect(() => {
+    if (stepInputs.length > 0) {
+      const combined = stepInputs.map(si => si.answer).join('\n\n');
+      setContent(combined);
+    }
+  }, [stepInputs]);
+
   if (isGenerating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -217,7 +281,7 @@ export default function WritePage() {
   }
 
   const displayTitle = prompt?.title || dynamicContent?.title || '言語化トレーニング';
-  const displayDescription = prompt?.description || dynamicContent?.description || '';
+  const displayDescription = dynamicContent?.question || dynamicContent?.description || '';
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
@@ -227,7 +291,7 @@ export default function WritePage() {
       <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
         {/* Header */}
         <header className="mb-6">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-4">
             <Link href="/">
               <Button variant="outline" size="icon" className="rounded-xl">
                 <ArrowLeft className="h-5 w-5" />
@@ -244,21 +308,18 @@ export default function WritePage() {
         <LuxuryTimer
           timeLeft={timeLeft}
           totalTime={totalTime}
-          onStart={() => setIsTimerRunning(true)}
+          onStart={handleStart}
           onPause={() => setIsTimerRunning(false)}
-          onReset={() => {
-            setTimeLeft(totalTime);
-            setIsTimerRunning(false);
-          }}
+          onReset={handleReset}
         />
 
         {/* Prompt Card */}
-        <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="flex items-start gap-4 mb-4">
+        <div className="vintage-card p-6 lg:p-8 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-start gap-4 mb-6">
             <div className="vintage-icon-container accent shrink-0">
               <Lightbulb className="w-5 h-5 text-background" />
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-serif font-semibold text-foreground mb-2">{displayTitle}</h2>
               <p className="text-foreground/80 leading-relaxed">{displayDescription}</p>
             </div>
@@ -268,14 +329,99 @@ export default function WritePage() {
               <img src={dynamicContent.imageUrl} alt="Abduction Lens" className="w-full" />
             </div>
           )}
+
+          {/* Step-by-step inputs for specific training types */}
+          {dynamicContent?.steps && dynamicContent.steps.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-border">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <List className="w-5 h-5 text-primary" />
+                  <h3 className="font-serif font-semibold text-foreground">
+                    ステップ別トレーニング
+                  </h3>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {currentStep + 1} / {stepInputs.length}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {dynamicContent.steps.map((step, index) => (
+                  <div
+                    key={step.step}
+                    className={`
+                      p-4 rounded-xl border transition-all duration-300
+                      ${index === currentStep
+                        ? 'border-accent bg-accent/5 shadow-md'
+                        : 'border-border bg-input opacity-60'}
+                    `}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`vintage-icon-container shrink-0 ${index === currentStep ? 'primary' : ''}`}>
+                        <span className="text-sm font-bold">{index + 1}</span>
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {step.label}
+                        </label>
+                        <textarea
+                          value={stepInputs[index]?.answer || ''}
+                          onChange={(e) => handleStepInput(index, e.target.value)}
+                          placeholder={step.placeholder}
+                          rows={3}
+                          disabled={index > currentStep}
+                          className={`
+                            w-full px-4 py-3 rounded-xl border text-base leading-relaxed resize-none
+                            ${index === currentStep
+                              ? 'border-accent bg-card focus:border-accent'
+                              : 'border-border bg-input'
+                            }
+                            disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-accent/30
+                          `}
+                        />
+                      </div>
+                    </div>
+
+                    {index === currentStep && stepInputs[index]?.answer && (
+                      <div className="flex justify-end mt-3">
+                        <Button
+                          onClick={handleNextStep}
+                          disabled={!stepInputs[index]?.answer}
+                          className="vintage-button-primary flex items-center gap-2"
+                        >
+                          次へ進む
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {currentStep === stepInputs.length - 1 && stepInputs[stepInputs.length - 1]?.answer && (
+                <div className="mt-6 flex justify-center">
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    リセットしてやり直す
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Input Area */}
-        <LuxuryInputArea
-          value={content}
-          onChange={setContent}
-          placeholder="あなたの思考を自由に書き出してください..."
-        />
+        {/* Input Area (for regular prompts or fogcatcher) */}
+        {!dynamicContent?.steps && (
+          <LuxuryInputArea
+            value={content}
+            onChange={setContent}
+            placeholder={dynamicContent?.description || prompt?.description || "ここにあなたの回答を書いてください..."}
+          />
+        )}
 
         {/* Tags */}
         <div className="vintage-card p-6 mb-6">
@@ -343,7 +489,7 @@ export default function WritePage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">3.</span>
-              <span>数字や事例で説得力を増す</span>
+              <span>数字や事例を交えると伝わりやすくなります</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">4.</span>
@@ -364,9 +510,9 @@ export default function WritePage() {
               <span className="font-semibold">{tags.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">進捗</span>
-              <span className={`font-semibold ${content.length > 100 ? 'text-primary' : 'text-muted-foreground'}`}>
-                {content.length > 100 ? '進行中' : '未着手'}
+              <span className="text-muted-foreground">ステップ</span>
+              <span className={`font-semibold ${dynamicContent?.steps ? 'text-primary' : 'text-muted-foreground'}`}>
+                {dynamicContent?.steps ? `${currentStep + 1} / ${stepInputs.length}` : '-'}
               </span>
             </div>
           </div>

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       description?: string;
       imageUrl?: string;
       question?: string;
-      theme?: string;
+      steps?: Array<{ step: number; label: string; placeholder: string }>;
     } | null = null;
 
     switch (type) {
@@ -132,68 +132,201 @@ export async function POST(request: NextRequest) {
       }
 
       case 'whysos': {
-        const prompts = [
-          '最近感じた「イライラ」を原因から掘り下げて分析してください。日本語で3文以内。',
-          '最近感じた「不安」を原因から掘り下げて分析してください。日本語で3文以内。',
-          '最近直面した「課題」を原因から掘り下げて分析してください。日本語で3文以内。',
-          '最近成功したことと、その背後にある要因を分析してください。日本語で3文以内。',
-          '最近失敗したことと、その根本原因を分析してください。日本語で3文以内。'
-        ];
-        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const aiResult = await textModel.generateContent(selectedPrompt);
-        result = { question: aiResult.response.text().trim() };
+        const prompt = `以下の形式で、なぜなぜ分析（5回のなぜ？）のための課題を生成してください。
+
+【課題】
+${['最近感じたイライラの原因', '最近直面した仕事の課題', '最近成功したことの背景', '最近失敗したことの根本原因', '最近気になっていることの根本原因', '最近変えたい習慣の理由'][Math.floor(Math.random() * 6)]}
+
+【回答例】
+1回目「なぜ？」：（20〜40文字）
+2回目「なぜ？」：（20〜40文字）
+3回目「なぜ？」：（20〜40文字）
+4回目「なぜ？」：（20〜40文字）
+5回目「なぜ？」：（20〜40文字、根本原因または行動）
+
+【トレーニングの目的】
+この手法は、表面的な原因ではなく、根本原因を探ることで、本質的な理解と解決策を発見するためのものです。5回繰り返すことで、表層から深層へと思考を掘り下げていきます。
+
+【制約条件】
+- 日常的で、誰にでも起こりうる課題であること
+- 日本語で自然な表現であること
+- 深掘りが可能な課題であること`;
+
+        const aiResult = await textModel.generateContent(prompt);
+        const text = aiResult.response.text().trim();
+
+        // Parse the response
+        const lines = text.split('\n').filter(line => line.trim());
+        const challenge = lines.find(line => !line.includes('回答例') && !line.includes('トレーニングの目的') && !line.includes('制約条件'));
+
+        result = {
+          question: challenge || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
+          steps: [
+            { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
+            { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
+            { step: 3, label: '3回目「なぜ？」', placeholder: '根本原因に近づけてください（20〜40文字）' },
+            { step: 4, label: '4回目「なぜ？」', placeholder: 'もっと深く掘り下げてください（20〜40文字）' },
+            { step: 5, label: '5回目「なぜ？」', placeholder: '根本原因を明確にしてください（20〜40文字）' }
+          ]
+        };
         break;
       }
 
       case 'sowhat': {
-        const prompts = [
-          '「最近読んだニュース」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
-          '「最近の仕事での出来事」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
-          '「最近の友人との会話」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。',
-          '「最近の失敗体験」に対して「つまり何？」という問いを投げかけ、そこから得られる教訓を日本語で3文以内で示してください。'
-        ];
-        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const aiResult = await textModel.generateContent(selectedPrompt);
-        result = { question: aiResult.response.text().trim() };
+        const prompt = `以下の形式で、「つまり何？」分析のための課題を生成してください。
+
+【テーマ】
+${['最近読んだニュースの本質', '最近の仕事での出来事から得られる教訓', '最近の友人との会話の意味', '最近の失敗体験から学ぶべきこと', '最近観察した社会現象の背景'][Math.floor(Math.random() * 6)]}
+
+【回答例】
+1回目「つまり何？」：（20〜40文字、意味や影響）
+2回目「つまり何？」：（20〜40文字、さらに深い意味）
+3回目「つまり何？」：（20〜40文字、抽象度を上げる）
+4回目「つまり何？」：（20〜40文字、行動可能な教訓）
+5回目「つまり何？」：（20〜40文字、本質的な洞察）
+
+【トレーニングの目的】
+この手法は、表面的な事実から抽象度を階段を登って、本質的な洞察を発見するためのものです。「事実」→「解釈」→「教訓」の流れで思考を整理し、意味を深めていきます。
+
+【制約条件】
+- 具体的な事実から始まること
+- 抽象度を徐々に上げること
+- 行動可能な教訓に落とし込むこと`;
+
+        const aiResult = await textModel.generateContent(prompt);
+        const text = aiResult.response.text().trim();
+
+        // Parse the response
+        const lines = text.split('\n').filter(line => line.trim());
+        const theme = lines.find(line => !line.includes('回答例') && !line.includes('トレーニングの目的') && !line.includes('制約条件'));
+
+        result = {
+          question: theme || '最近読んだニュースの本質を「つまり何？」で掘り下げてください。',
+          steps: [
+            { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
+            { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
+            { step: 3, label: '3回目「つまり何？」', placeholder: '抽象度を上げて考えてください（20〜40文字）' },
+            { step: 4, label: '4回目「つまり何？」', placeholder: '行動可能な教訓を考えてください（20〜40文字）' },
+            { step: 5, label: '5回目「つまり何？」', placeholder: '本質的な洞察をまとめてください（20〜40文字）' }
+          ]
+        };
         break;
       }
 
       case '5w1h': {
-        const prompts = [
-          '最近の「買い物」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
-          '最近の「会議」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
-          '最近の「旅行」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。',
-          '最近の「トラブル解決」について、When（いつ）、Where（どこ）、Who（誰）、What（何）、Why（なぜ）、How（どのように）の5つの要素を整理して日本語で要約してください。'
-        ];
-        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const aiResult = await textModel.generateContent(selectedPrompt);
-        result = { question: aiResult.response.text().trim() };
+        const prompt = `以下の形式で、5W1H（5つのW、1つのH）分析のための課題を生成してください。
+
+【テーマ】
+${['最近の買い物の5W1H整理', '最近の会議の5W1H整理', '最近の旅行の5W1H整理', '最近のトラブル解決の5W1H整理', '最近のプロジェクトの5W1H整理'][Math.floor(Math.random() * 6)]}
+
+【5W1H要素】
+- When（いつ）：（10〜20文字）
+- Where（どこ）：（10〜20文字）
+- Who（誰）：（10〜20文字）
+- What（何）：（10〜20文字）
+- Why（なぜ）：（10〜20文字）
+- How（どのように）：（10〜20文字）
+
+【行動プラン】
+（上記5W1Hに基づいた行動プランを1〜2文でまとめる）
+
+【トレーニングの目的】
+5W1Hは、情報を6つの要素に整理し、具体的で実行可能なアクションプランを作成するための思考法です。情報の漏れを防ぎ、論理的な行動計画を立てることができます。
+
+【制約条件】
+- 6つの要素すべてを網羅すること
+- 具体的で実行可能であること
+- 行動プランが明確であること`;
+
+        const aiResult = await textModel.generateContent(prompt);
+        const text = aiResult.response.text().trim();
+
+        // Parse the response to extract 5W1H elements
+        const lines = text.split('\n').filter(line => line.trim());
+        const theme = lines.find(line => !line.includes('回答例') && !line.includes('トレーニングの目的') && !line.includes('制約条件')) || '最近の買い物について5W1Hで整理して行動プランを作成してください。';
+
+        result = {
+          question: theme,
+          steps: [
+            { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
+            { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
+            { step: 3, label: 'Who（誰）', placeholder: '誰が関わっていましたか？（10〜20文字）' },
+            { step: 4, label: 'What（何）', placeholder: '何が起こりましたか？（10〜20文字）' },
+            { step: 5, label: 'Why（なぜ）', placeholder: 'なぜ起こりましたか？（10〜20文字）' },
+            { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
+          ]
+        };
         break;
       }
 
       case 'prep': {
-        const prompts = [
-          '「リモートワークのメリット」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
-          '「朝活の重要性」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
-          '「時間管理の重要性」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。',
-          '「継続の力」について、Point（結論）→Reason（理由）→Example（具体例）→Point（結論）の順序で構成し、日本語で3文以内で提示してください。'
-        ];
-        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const aiResult = await textModel.generateContent(selectedPrompt);
-        result = { question: aiResult.response.text().trim() };
+        const prompt = `以下の形式で、PREP法（Point-Reason-Example-Point）のための課題を生成してください。
+
+【テーマ】
+${['リモートワークのメリットをPREP法で伝える', '朝活の重要性をPREP法で伝える', '時間管理の重要性をPREP法で伝える', '継続の力をPREP法で伝える', 'デジタル detox の効果をPREP法で伝える'][Math.floor(Math.random() * 6)]}
+
+【PREP構成の回答例】
+- Point（結論）：（20〜40文字、主張）
+- Reason（理由）：（20〜40文字、その理由）
+- Example（具体例）：（20〜40文字、裏付け）
+- Point（結論）：（20〜40文字、主張の再確認）
+
+【トレーニングの目的】
+PREP法は、意見や主張を論理的でわかりやすく伝えるための構成法です。「結論」→「理由」→「具体例」→「結論」の順序で構成することで、説得力を高め、相手に伝わりやすい表現になります。
+
+【制約条件】
+- 結論が明確であること
+- 理由と具体例が一貫していること
+- 論理的に説得力があること`;
+
+        const aiResult = await textModel.generateContent(prompt);
+        const text = aiResult.response.text().trim();
+
+        // Parse the response to get theme
+        const lines = text.split('\n').filter(line => line.trim());
+        const theme = lines.find(line => !line.includes('回答例') && !line.includes('トレーニングの目的') && !line.includes('制約条件')) || 'リモートワークのメリットをPREP法で伝えてください。';
+
+        result = {
+          question: theme,
+          steps: [
+            { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
+            { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
+            { step: 3, label: 'Example（具体例）', placeholder: '具体例を挙げてください（20〜40文字）' },
+            { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
+          ]
+        };
         break;
       }
 
       case 'fogcatcher': {
-        const prompts = [
-          '今の頭の中にある「ぼんやりとした悩み」をそのまま言語化して書き出してください。日本語で3文以内。',
-          '今の頭の中にある「漠然とした不安」をそのまま言語化して書き出してください。日本語で3文以内。',
-          '今の頭の中にある「モヤモヤした感情」をそのまま言語化して書き出してください。日本語で3文以内。',
-          '今の頭の中にある「言いにくい思い」をそのまま言語化して書き出してください。日本語で3文以内。'
-        ];
-        const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-        const aiResult = await textModel.generateContent(selectedPrompt);
-        result = { question: aiResult.response.text().trim() };
+        const prompt = `以下の形式で、Fog Catcher（思考の霧払い）のためのテーマを生成してください。
+
+【テーマ】
+${['今の頭の中にある「ぼんやりとした悩み」', '最近感じた「漠然とした不安」', '最近のモヤモヤした感情', '言いにくい思考', '将来への不確かな思い'][Math.floor(Math.random() * 6)]}
+
+【テーマの説明】
+（このテーマについて、自分の思考や感情を率直に書き出すためのガイドラインを1〜2文で説明）
+
+【トレーニングの目的】
+Fog Catcherは、頭の中にあるぼんやりとした思考や感情を、無制限に、編集せずに、そのまま書き出すことで思考を整理・明確化するためのトレーニングです。言葉にすることで、霧が晴れ、思考がクリアになります。
+
+【制約条件】
+- 思考や感情を率直に表現すること
+- 編集せずに書き出すこと
+- �語化することで思考を整理すること`;
+
+        const aiResult = await textModel.generateContent(prompt);
+        const text = aiResult.response.text().trim();
+
+        // Parse the response to get theme and description
+        const lines = text.split('\n').filter(line => line.trim());
+        const theme = lines[0] || '今の頭の中にある「ぼんやりとした悩み」';
+        const description = lines.slice(1).join(' ') || '思考や感情を制限なしで自由に書き出してください。';
+
+        result = {
+          question: theme,
+          description: `思考や感情を制限なしで自由に書き出してください。編集せず、そのままの言葉で書くことで、思考の霧を晴らすことができます。${description}`
+        };
         break;
       }
 
