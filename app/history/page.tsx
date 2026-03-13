@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ProgressChart } from '@/components/ProgressChart';
+import { Badge } from '@/components/ui/badge';
+import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 
 interface Entry {
   id: string;
@@ -20,18 +19,18 @@ interface Entry {
 }
 
 const categoryColors: Record<string, string> = {
-  basic: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  emotion: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  work: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  abduction: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-  synapse: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
-  metaphor: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  fogcatcher: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
-  whysos: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  sowhat: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
-  '5w1h': 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-  prep: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  'abduction-lens': 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
+  basic: 'bg-blue-100 text-blue-800',
+  emotion: 'bg-purple-100 text-purple-800',
+  work: 'bg-green-100 text-green-800',
+  abduction: 'bg-orange-100 text-orange-800',
+  synapse: 'bg-pink-100 text-pink-800',
+  metaphor: 'bg-yellow-100 text-yellow-800',
+  fogcatcher: 'bg-cyan-100 text-cyan-800',
+  whysos: 'bg-red-100 text-red-800',
+  sowhat: 'bg-indigo-100 text-indigo-800',
+  '5w1h': 'bg-teal-100 text-teal-800',
+  prep: 'bg-amber-100 text-amber-800',
+  'abduction-lens': 'bg-rose-100 text-rose-800',
 };
 
 const categoryNames: Record<string, string> = {
@@ -49,23 +48,23 @@ const categoryNames: Record<string, string> = {
   'abduction-lens': 'Abduction Lens',
 };
 
-type ViewMode = 'list' | 'chart';
+type ViewMode = 'list';
 
 export default function HistoryPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     loadEntries();
+    setMounted(true);
   }, []);
 
   useEffect(() => {
     let filtered = entries;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(e =>
         e.promptTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,12 +73,10 @@ export default function HistoryPage() {
       );
     }
 
-    // Filter by tag
     if (selectedTag) {
       filtered = filtered.filter(e => e.tags.includes(selectedTag));
     }
 
-    // Sort by date descending
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     setFilteredEntries(filtered);
@@ -99,8 +96,6 @@ export default function HistoryPage() {
       const updated = entries.filter(e => e.id !== id);
       setEntries(updated);
       localStorage.setItem('verbalize_entries', JSON.stringify(updated));
-
-      // Update total count
       localStorage.setItem('verbalize_total', updated.length.toString());
     }
   };
@@ -123,146 +118,193 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-semibold">履歴</h1>
-          <div className="ml-auto text-sm text-muted-foreground">
-            {entries.length}件の記録
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      <FloatingParticles />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/">
+              <Button variant="outline" size="icon" className="rounded-xl">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-serif font-semibold text-foreground">履歴</h1>
+              <p className="text-sm text-muted-foreground">あなたの言語化の記録</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <span className="text-foreground font-medium">{entries.length}件の記録</span>
+            </div>
+            {getAllTags().length > 0 && (
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground text-sm">{getAllTags().length}個のタグ</span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Search */}
+        <div className={`vintage-card p-4 mb-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="記録を検索..."
+              className="pl-10"
+            />
           </div>
         </div>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* View Mode Toggle */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            onClick={() => setViewMode('list')}
-            className="flex-1"
-          >
-            <List className="h-4 w-4 mr-2" />
-            リスト
-          </Button>
-          <Button
-            variant={viewMode === 'chart' ? 'default' : 'outline'}
-            onClick={() => setViewMode('chart')}
-            className="flex-1"
-            disabled={entries.length === 0}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            グラフ
-          </Button>
+        {/* Tag Filter */}
+        {getAllTags().length > 0 && (
+          <div className={`vintage-card p-4 mb-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
+            <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider">タグで絞り込み</p>
+            <div className="flex flex-wrap gap-2">
+              <Badge
+                className={`px-3 py-1.5 rounded-full cursor-pointer transition-all ${
+                  selectedTag === ''
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-primary/20'
+                }`}
+                onClick={() => setSelectedTag('')}
+              >
+                すべて
+              </Badge>
+              {getAllTags().map(tag => (
+                <Badge
+                  key={tag}
+                  className={`px-3 py-1.5 rounded-full cursor-pointer transition-all ${
+                    selectedTag === tag
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-primary/20'
+                  }`}
+                  onClick={() => setSelectedTag(tag)}
+                >
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Entries List */}
+        {filteredEntries.length === 0 ? (
+          <div className={`vintage-card p-12 text-center ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
+            <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-foreground font-serif text-xl mb-2">
+              {entries.length === 0 ? 'まだ記録がありません' : '見つかりません'}
+            </p>
+            <p className="text-muted-foreground mb-6">
+              {entries.length === 0
+                ? 'トレーニングを始めて、最初の記録を作りましょう！'
+                : '他の検索条件を試してみてください'}
+            </p>
+            {entries.length === 0 && (
+              <Link href="/">
+                <Button className="vintage-button-primary">
+                  トレーニングを開始
+                </Button>
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className={`space-y-4 ${mounted ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+            {filteredEntries.map((entry, index) => (
+              <div
+                key={entry.id}
+                className="vintage-card p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge className={`px-3 py-1 rounded-full ${categoryColors[entry.category] || 'bg-muted'}`}>
+                        {categoryNames[entry.category] || entry.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(entry.createdAt)}
+                      </span>
+                    </div>
+                    <h3 className="font-serif font-semibold text-lg text-foreground">{entry.promptTitle}</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(entry.id)}
+                    className="text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-xl"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+                  {entry.content}
+                </p>
+                {entry.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {entry.tags.map(tag => (
+                      <Badge key={tag} variant="outline" className="text-xs px-2 py-0.5 rounded-full">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
+        <div className="vintage-card p-6 mb-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">統計</h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">総記録数</p>
+              <p className="text-2xl font-serif font-semibold text-primary">{entries.length}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">タグ数</p>
+              <p className="text-2xl font-serif font-semibold text-primary">{getAllTags().length}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">カテゴリー</p>
+              <p className="text-2xl font-serif font-semibold text-primary">
+                {new Set(entries.map(e => e.category)).size}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Chart View */}
-        {viewMode === 'chart' && <ProgressChart entries={entries} />}
-
-        {/* List View */}
-        {viewMode === 'list' && (
-          <>
-            {/* Search */}
-            <div className="mb-6">
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="検索..."
-                className="max-w-md"
-              />
-            </div>
-
-            {/* Tag Filter */}
-            {getAllTags().length > 0 && (
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                    variant={selectedTag === '' ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedTag('')}
-                  >
-                    すべて
-                  </Badge>
-                  {getAllTags().map(tag => (
-                    <Badge
-                      key={tag}
-                      variant={selectedTag === tag ? 'default' : 'outline'}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Entries List */}
-            {filteredEntries.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    {entries.length === 0
-                      ? 'まだ記録がありません。トレーニングを始めましょう！'
-                      : '検索条件に一致する記録がありません。'}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {filteredEntries.map((entry) => (
-                  <Card key={entry.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={categoryColors[entry.category] || 'bg-gray-100 text-gray-800'}>
-                              {categoryNames[entry.category] || entry.category}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatDate(entry.createdAt)}
-                            </span>
-                          </div>
-                          <CardTitle className="text-lg">{entry.promptTitle}</CardTitle>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(entry.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                        {entry.content}
-                      </p>
-                      {entry.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {entry.tags.map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </main>
+        <div className="vintage-card p-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">コツ</h3>
+          <ul className="space-y-3 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>過去の回答を見直すと成長が感じられます</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>タグを活用して記録を整理しましょう</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>検索機能で過去のインスピレーションを</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 }

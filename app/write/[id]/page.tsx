@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Clock, Send, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { fixedPrompts, dynamicPrompts, getRandomPrompt } from '@/lib/prompts';
 import { Prompt } from '@/types';
+import { FloatingParticles } from '@/components/luxury/FloatingParticles';
+import { LuxuryTimer } from '@/components/luxury/LuxuryTimer';
+import { LuxuryInputArea } from '@/components/luxury/LuxuryInputArea';
 
 export default function WritePage() {
   const params = useParams();
@@ -23,32 +24,35 @@ export default function WritePage() {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [totalTime, setTotalTime] = useState(300);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    // Find prompt or generate dynamic content
     if (dynamicPrompts[id]) {
-      // Dynamic prompt - need to generate content
       setDynamicContent({
         title: dynamicPrompts[id].title,
         description: dynamicPrompts[id].description
       });
-      setTimeLeft(dynamicPrompts[id].timeLimit * 60);
+      const timeLimit = dynamicPrompts[id].timeLimit * 60;
+      setTimeLeft(timeLimit);
+      setTotalTime(timeLimit);
       generateDynamicPrompt(id);
     } else {
-      // Fixed prompt
       const found = fixedPrompts.find(p => p.id === id || p.category === id);
       if (found) {
         setPrompt(found);
-        setTimeLeft(found.timeLimit * 60);
+        const timeLimit = found.timeLimit * 60;
+        setTimeLeft(timeLimit);
+        setTotalTime(timeLimit);
       } else {
-        // Random from category if category specified
         const random = getRandomPrompt(id === 'basic' || id === 'emotion' || id === 'work' || id === 'abduction' ? id : undefined);
         if (random) {
           setPrompt(random);
-          setTimeLeft(random.timeLimit * 60);
+          const timeLimit = random.timeLimit * 60;
+          setTimeLeft(timeLimit);
+          setTotalTime(timeLimit);
         }
       }
     }
@@ -75,9 +79,7 @@ export default function WritePage() {
         body: JSON.stringify({ type }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate prompt');
-      }
+      if (!response.ok) throw new Error('Failed to generate prompt');
 
       const result = await response.json();
 
@@ -110,10 +112,6 @@ export default function WritePage() {
     }
   };
 
-  const handleStart = () => {
-    setIsTimerRunning(true);
-  };
-
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
@@ -130,7 +128,6 @@ export default function WritePage() {
 
     setIsSubmitting(true);
 
-    // Save to localStorage
     const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
     const newEntry = {
       id: Date.now().toString(),
@@ -144,7 +141,6 @@ export default function WritePage() {
     entries.push(newEntry);
     localStorage.setItem('verbalize_entries', JSON.stringify(entries));
 
-    // Update streak
     const lastEntry = entries[entries.length - 2];
     const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
     const today = new Date();
@@ -168,22 +164,28 @@ export default function WritePage() {
     localStorage.setItem('verbalize_streak', streak.toString());
     localStorage.setItem('verbalize_total', entries.length.toString());
 
-    // Redirect to feedback
     router.push(`/write/feedback?entryId=${newEntry.id}`);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-lg">お題を生成中...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <FloatingParticles />
+        <div className="vintage-card p-12 text-center z-10">
+          <div className="vintage-icon-container primary mx-auto mb-6 animate-bounce">
+            <Sparkles className="w-8 h-8 text-background" />
+          </div>
+          <p className="text-xl font-serif font-semibold mb-2">お題を生成中...</p>
+          <p className="text-muted-foreground">少々お待ちください</p>
+          <div className="mt-6 flex justify-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-pulse"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -193,104 +195,158 @@ export default function WritePage() {
   const displayDescription = prompt?.description || dynamicContent?.description || '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-semibold">言語化トレーニング</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      <FloatingParticles />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Timer */}
-        <Card className="mb-6">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-mono font-bold">{formatTime(timeLeft)}</span>
-            </div>
-            {!isTimerRunning && timeLeft > 0 && (
-              <Button onClick={handleStart}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                スタート
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center gap-4 mb-6">
+            <Link href="/">
+              <Button variant="outline" size="icon" className="rounded-xl">
+                <ArrowLeft className="h-5 w-5" />
               </Button>
-            )}
-          </CardContent>
-        </Card>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-serif font-semibold text-foreground">言語化トレーニング</h1>
+              <p className="text-sm text-muted-foreground">思考を言葉に変える旅</p>
+            </div>
+          </div>
+        </header>
+
+        {/* Timer */}
+        <LuxuryTimer
+          timeLeft={timeLeft}
+          totalTime={totalTime}
+          onStart={() => setIsTimerRunning(true)}
+          onPause={() => setIsTimerRunning(false)}
+          onReset={() => {
+            setTimeLeft(totalTime);
+            setIsTimerRunning(false);
+          }}
+        />
 
         {/* Prompt Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl">{displayTitle}</CardTitle>
-            <CardDescription>以下のお題について言語化してください</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg mb-4">{displayDescription}</p>
-            {dynamicContent?.imageUrl && (
-              <div className="mt-4 rounded-lg overflow-hidden">
-                <img src={dynamicContent.imageUrl} alt="Abduction Lens" className="w-full" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-start gap-4 mb-4">
+            <div className="vintage-icon-container accent shrink-0">
+              <Lightbulb className="w-5 h-5 text-background" />
+            </div>
+            <div>
+              <h2 className="text-xl font-serif font-semibold text-foreground mb-2">{displayTitle}</h2>
+              <p className="text-foreground/80 leading-relaxed">{displayDescription}</p>
+            </div>
+          </div>
+          {dynamicContent?.imageUrl && (
+            <div className="mt-6 rounded-2xl overflow-hidden border border-border">
+              <img src={dynamicContent.imageUrl} alt="Abduction Lens" className="w-full" />
+            </div>
+          )}
+        </div>
 
         {/* Input Area */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <label className="block text-sm font-medium mb-2">回答</label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="ここにあなたの回答を書いてください..."
-              className="min-h-[300px] resize-none text-base"
-            />
-          </CardContent>
-        </Card>
+        <LuxuryInputArea
+          value={content}
+          onChange={setContent}
+          placeholder="あなたの思考を自由に書き出してください..."
+        />
 
         {/* Tags */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <label className="block text-sm font-medium mb-2">タグ（任意）</label>
-            <div className="flex gap-2 mb-3">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                placeholder="タグを入力してEnter"
-                className="flex-1"
-              />
-              <Button onClick={handleAddTag}>追加</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => handleRemoveTag(tag)}>
-                  {tag} ×
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="vintage-card p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen className="w-4 h-4 text-muted-foreground" />
+            <h3 className="font-medium text-foreground">タグ（任意）</h3>
+          </div>
+          <div className="flex gap-2 mb-4">
+            <Input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+              placeholder="タグを入力してEnter"
+              className="flex-1"
+            />
+            <Button onClick={handleAddTag}>追加</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Badge
+                key={tag}
+                className="px-3 py-1.5 rounded-full bg-muted text-foreground hover:bg-danger hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                onClick={() => handleRemoveTag(tag)}
+              >
+                {tag}
+                <X className="w-3 h-3" />
+              </Badge>
+            ))}
+          </div>
+        </div>
 
         {/* Submit Button */}
-        <Button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} size="lg" className="w-full">
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || !content.trim()}
+          size="lg"
+          className="vintage-button-primary w-full h-14 text-base"
+        >
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               送信中...
             </>
           ) : (
             <>
-              <Send className="mr-2 h-4 w-4" />
-              提出する
+              <Send className="mr-2 h-5 w-5" />
+              回答を提出する
             </>
           )}
         </Button>
-      </main>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
+        <div className="vintage-card p-6 mb-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">コツ</h3>
+          <ul className="space-y-3 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-primary">1.</span>
+              <span>抽象的な概念を具体的な言葉に変える</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">2.</span>
+              <span>自分の経験やエピソードを交える</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">3.</span>
+              <span>数字や事例で説得力を増す</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">4.</span>
+              <span>簡潔に、でも十分に伝える</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="vintage-card p-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">現在の状況</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">文字数</span>
+              <span className="font-semibold">{content.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">タグ</span>
+              <span className="font-semibold">{tags.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">進捗</span>
+              <span className={`font-semibold ${content.length > 100 ? 'text-primary' : 'text-muted-foreground'}`}>
+                {content.length > 100 ? '進行中' : '未着手'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

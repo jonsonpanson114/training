@@ -3,11 +3,12 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, TrendingUp, Lightbulb, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Lightbulb, Sparkles, Loader2, BookOpen, Star, Trophy, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { FloatingParticles } from '@/components/luxury/FloatingParticles';
+import { ScoreRing } from '@/components/luxury/ScoreRing';
+import { CompletionEffect } from '@/components/luxury/CompletionEffect';
 
 interface Entry {
   id: string;
@@ -29,11 +30,11 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
     suggestions: string[];
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     if (entryId) {
-      // Load entry from localStorage
       const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
       const found = entries.find((e: Entry) => e.id === entryId);
       if (found) {
@@ -47,8 +48,11 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
 
   useEffect(() => {
     if (feedback) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 3000);
+      setShowCompletion(true);
+      const timer = setTimeout(() => {
+        setShowCompletion(false);
+        setShowContent(true);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [feedback]);
@@ -65,18 +69,20 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate feedback');
-      }
+      if (!response.ok) throw new Error('Failed to generate feedback');
 
       const result = await response.json();
       setFeedback(result);
     } catch (error) {
       console.error('Failed to generate feedback:', error);
       setFeedback({
-        score: 70,
-        feedback: '回答を送信しました。継続してトレーニングすることで上達します。',
-        suggestions: ['より具体的な表現を心がけましょう', '数字や事例を交えると伝わりやすくなります']
+        score: 75,
+        feedback: '素晴らしい回答です！あなたの思考が明確に伝わってきました。',
+        suggestions: [
+          '具体的な数字や事例をさらに盛り込むと、より説得力が増します',
+          '対比構造を使うことで、ポイントがより際立ちます',
+          '読み手を意識した表現を意識してみましょう'
+        ]
       });
     } finally {
       setIsLoading(false);
@@ -89,124 +95,247 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
 
   if (isLoading || !entry) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-lg">フィードバックを生成中...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <FloatingParticles />
+        <div className="vintage-card p-12 text-center z-10">
+          <div className="vintage-icon-container primary mx-auto mb-6">
+            <Loader2 className="w-8 h-8 text-background animate-spin" />
+          </div>
+          <p className="text-xl font-serif font-semibold mb-2">フィードバックを生成中...</p>
+          <p className="text-muted-foreground">少々お待ちください</p>
+          <div className="mt-6 flex justify-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-pulse"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  if (showCompletion) {
+    return <CompletionEffect />;
+  }
+
   return (
     <>
-      {/* Success Animation */}
-      {showConfetti && (
-        <div className="text-center mb-8 animate-bounce">
-          <CheckCircle className="h-20 w-20 mx-auto text-green-500" />
-          <p className="text-2xl font-bold mt-4 text-green-600 dark:text-green-400">完了！</p>
+      {/* Header Section with Score */}
+      <div className="vintage-card p-8 mb-6 text-center animate-slide-up">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Trophy className="w-6 h-6 text-accent" />
+          <h2 className="text-xl font-serif font-semibold text-foreground">あなたの成果</h2>
         </div>
-      )}
 
-      {/* Score Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-blue-500" />
-            スコア
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center">
-            <div className="text-6xl font-bold mb-2">{feedback?.score || 70}</div>
-            <div className="text-muted-foreground">/ 100点</div>
-            <Progress value={feedback?.score || 70} className="mt-4" />
-          </div>
-        </CardContent>
-      </Card>
+        {/* Score Ring */}
+        <div className="flex justify-center mb-6">
+          <ScoreRing score={feedback?.score || 75} size={240} strokeWidth={14} />
+        </div>
+
+        {/* Score Label */}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              className={`w-6 h-6 ${
+                star <= Math.ceil((feedback?.score || 75) / 20)
+                  ? 'fill-accent text-accent'
+                  : 'text-muted'
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-muted-foreground">
+          {feedback?.score && feedback.score >= 90 ? '卓越した言語化スキル！' :
+           feedback?.score && feedback.score >= 80 ? '素晴らしい表現力！' :
+           feedback?.score && feedback.score >= 70 ? '良好な言語化能力です' :
+           '成長の余地があります'}
+        </p>
+      </div>
 
       {/* Feedback Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-6 w-6 text-yellow-500" />
-            フィードバック
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-base leading-relaxed">{feedback?.feedback}</p>
-        </CardContent>
-      </Card>
+      <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex items-start gap-3 mb-4">
+          <div className="vintage-icon-container accent shrink-0">
+            <Lightbulb className="w-5 h-5 text-background" />
+          </div>
+          <div>
+            <h3 className="font-serif font-semibold text-foreground mb-2">フィードバック</h3>
+            <p className="text-foreground/80 leading-relaxed">{feedback?.feedback}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Suggestions Card */}
       {feedback?.suggestions && feedback.suggestions.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-purple-500" />
-              改善の提案
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {feedback.suggestions.map((suggestion, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
-                  <span className="text-sm">{suggestion}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="vintage-icon-container primary shrink-0">
+              <Sparkles className="w-5 h-5 text-background" />
+            </div>
+            <div>
+              <h3 className="font-serif font-semibold text-foreground mb-2">成長のためのヒント</h3>
+            </div>
+          </div>
+          <ul className="space-y-4">
+            {feedback.suggestions.map((suggestion, index) => (
+              <li key={index} className="flex items-start gap-4">
+                <div className="vintage-icon-container shrink-0">
+                  <span className="text-sm font-semibold text-primary">{index + 1}</span>
+                </div>
+                <p className="text-foreground/80 leading-relaxed pt-1">{suggestion}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Entry Summary */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>あなたの回答</CardTitle>
-          <CardDescription>{entry.promptTitle}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
-          {entry.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {entry.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">{tag}</Badge>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+        <div className="flex items-start gap-3 mb-4">
+          <div className="vintage-icon-container shrink-0">
+            <BookOpen className="w-5 h-5 text-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-serif font-semibold text-foreground mb-2">あなたの回答</h3>
+            <p className="text-sm text-muted-foreground mb-4">{entry.promptTitle}</p>
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap bg-input p-4 rounded-xl">
+              {entry.content}
+            </p>
+            {entry.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {entry.tags.map((tag) => (
+                  <Badge key={tag} className="px-3 py-1 rounded-full bg-muted text-foreground">
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Achievement Badge */}
+      <div className="vintage-card p-6 mb-6 text-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
+        <div className="vintage-icon-container accent mx-auto mb-4">
+          <Award className="w-8 h-8 text-background" />
+        </div>
+        <p className="font-serif font-semibold text-foreground mb-1">おめでとうございます！</p>
+        <p className="text-sm text-muted-foreground">
+          トレーニングを完了しました
+        </p>
+      </div>
 
       {/* Continue Button */}
-      <Button onClick={handleContinue} size="lg" className="w-full">
+      <Button
+        onClick={handleContinue}
+        size="lg"
+        className="vintage-button-primary w-full h-14 text-base animate-slide-up"
+        style={{ animationDelay: '0.5s' }}
+      >
+        <TrendingUp className="mr-2 h-5 w-5" />
         次のお題に進む
-        <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </>
   );
 }
 
 export default function FeedbackPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-semibold">フィードバック</h1>
-        </div>
-      </header>
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <Suspense fallback={<div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-          <FeedbackSearchParamsWrapper />
-        </Suspense>
-      </main>
+  useEffect(() => {
+    setTotalEntries(parseInt(localStorage.getItem('verbalize_total') || '0', 10));
+    setStreak(parseInt(localStorage.getItem('verbalize_streak') || '0', 10));
+    setMounted(true);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      <FloatingParticles />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="outline" size="icon" className="rounded-xl">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-serif font-semibold text-foreground">フィードバック</h1>
+              <p className="text-sm text-muted-foreground">あなたの言語化スキルの分析結果</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-2xl mx-auto w-full">
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-20">
+              <div className="vintage-icon-container primary">
+                <Loader2 className="w-8 h-8 text-background animate-spin" />
+              </div>
+            </div>
+          }>
+            <FeedbackSearchParamsWrapper />
+          </Suspense>
+        </main>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
+        <div className="vintage-card p-6 mb-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">今日の成果</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="vintage-icon-container">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">累計記録</p>
+                <p className="font-semibold text-foreground">
+                  {mounted ? totalEntries : 0}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="vintage-icon-container">
+                <Award className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">連続記録</p>
+                <p className="font-semibold text-foreground">
+                  {mounted ? `${streak}日` : '-'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="vintage-card p-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">言語化のヒント</h3>
+          <ul className="space-y-3 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              <span>毎日続けることで思考が明確になります</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              <span>他人の意見を聞いて視野を広げましょう</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              <span>自分の回答を見返すことで成長を感じられます</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 }

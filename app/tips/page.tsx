@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Lightbulb, Target, Brain, BookOpen, Zap } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Target, Brain, BookOpen, Zap, Sparkles, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 
 const tips = [
   {
@@ -69,92 +69,178 @@ const tips = [
 ];
 
 const categoryColors: Record<string, string> = {
-  基本: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  発想力: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  思考整理: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  感情: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-  伝え方: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
-  仮説思考: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  基本: 'bg-blue-100 text-blue-800',
+  発想力: 'bg-purple-100 text-purple-800',
+  思考整理: 'bg-green-100 text-green-800',
+  感情: 'bg-orange-100 text-orange-800',
+  伝え方: 'bg-pink-100 text-pink-800',
+  仮説思考: 'bg-yellow-100 text-yellow-800',
+};
+
+const categoryIcons: Record<string, any> = {
+  基本: Target,
+  発想力: Sparkles,
+  思考整理: Brain,
+  感情: Lightbulb,
+  伝え方: BookOpen,
+  仮説思考: Zap,
 };
 
 export default function TipsPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-semibold">言語化のコツ</h1>
-        </div>
-      </header>
+  const categories = ['基本', '発想力', '思考整理', '感情', '伝え方', '仮説思考'];
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-          <CardHeader>
-            <CardTitle className="text-2xl">言語化とは？</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg leading-relaxed">
+  return (
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      <FloatingParticles />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/">
+              <Button variant="outline" size="icon" className="rounded-xl">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-serif font-semibold text-foreground">言語化のコツ</h1>
+              <p className="text-sm text-muted-foreground">思考を言葉に変えるスキルを身につける</p>
+            </div>
+          </div>
+        </header>
+
+        {/* What is Verbalize */}
+        <div className="vintage-card p-8 mb-8 relative overflow-hidden animate-slide-up">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="vintage-icon-container accent">
+                <Sparkles className="w-6 h-6 text-background" />
+              </div>
+              <h2 className="text-2xl font-serif font-semibold text-foreground">言語化とは？</h2>
+            </div>
+            <p className="text-lg text-foreground/80 leading-relaxed mb-6">
               言語化とは、頭の中にある曖昧な思考や感情を、具体的な言葉で表現することです。
               このトレーニングを続けることで、以下の効果が期待できます。
             </p>
-            <ul className="mt-4 space-y-2">
-              <li>• 思考が整理され、判断力が向上する</li>
-              <li>• 他者とのコミュニケーションがスムーズになる</li>
-              <li>• 自分の感情や価値観が明確になる</li>
-              <li>• 文章力やプレゼンテーション能力が上がる</li>
-              <li>• 問題解決能力が向上する</li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <h2 className="text-2xl font-bold mb-4">言語化のコツ</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {tips.map((tip, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${categoryColors[tip.category] || 'bg-gray-100'}`}>
-                    <tip.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CardTitle className="text-lg">{tip.title}</CardTitle>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded ${categoryColors[tip.category] || 'bg-gray-100'}`}>
-                      {tip.category}
-                    </span>
-                  </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              {[
+                '思考が整理され、判断力が向上する',
+                '他者とのコミュニケーションがスムーズになる',
+                '自分の感情や価値観が明確になる',
+                '文章力やプレゼンテーション能力が上がる',
+                '問題解決能力が向上する'
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm text-foreground/80">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  {benefit}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {tip.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
 
-        <Card className="mt-8 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <Zap className="h-8 w-8 text-yellow-500 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-lg mb-2">継続が鍵です</h3>
-                <p className="text-sm text-muted-foreground">
-                  言語化は筋トレと同じで、毎日少しずつ続けることで効果が現れます。
-                  1日5分〜10分のトレーニングを習慣にしましょう。連続記録日数を増やすことが目標の一つです！
-                </p>
+        {/* Tips by Category */}
+        {categories.map((category, catIndex) => {
+          const categoryTips = tips.filter(t => t.category === category);
+          if (categoryTips.length === 0) return null;
+
+          const CategoryIcon = categoryIcons[category];
+
+          return (
+            <div key={category} className="mb-8 animate-slide-up" style={{ animationDelay: `${catIndex * 0.1}s` }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`vintage-icon-container ${categoryColors[category]}`}>
+                  <CategoryIcon className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-serif font-semibold text-foreground">{category}</h3>
+              </div>
+              <div className="space-y-3">
+                {categoryTips.map((tip, index) => (
+                  <div
+                    key={index}
+                    className="vintage-card p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`vintage-icon-container shrink-0 ${categoryColors[category]}`}>
+                        <tip.icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-serif font-semibold text-foreground mb-2">{tip.title}</h4>
+                        <p className="text-sm text-foreground/70 leading-relaxed">{tip.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </main>
+          );
+        })}
+
+        {/* Consistency Card */}
+        <div className="vintage-card p-8 text-center animate-slide-up" style={{ animationDelay: '0.6s' }}>
+          <div className="vintage-icon-container accent mx-auto mb-4">
+            <Award className="w-8 h-8 text-background" />
+          </div>
+          <h3 className="font-serif font-semibold text-xl text-foreground mb-3">継続が鍵です</h3>
+          <p className="text-foreground/70 leading-relaxed mb-6">
+            言語化は筋トレと同じで、毎日少しずつ続けることで効果が現れます。
+            1日5分〜10分のトレーニングを習慣にしましょう。連続記録日数を増やすことが目標の一つです！
+          </p>
+          <Link href="/">
+            <Button className="vintage-button-primary">
+              今すぐトレーニングを開始
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
+        {/* Quick Navigation */}
+        <div className="vintage-card p-6 mb-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">カテゴリー</h3>
+          <nav className="space-y-2">
+            {categories.map((category, index) => {
+              const CategoryIcon = categoryIcons[category];
+              return (
+                <a
+                  key={category}
+                  href={`#category-${category}`}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground hover:bg-card hover:text-foreground transition-all duration-200"
+                >
+                  <CategoryIcon className="w-4 h-4" />
+                  <span className="text-sm">{category}</span>
+                </a>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Stats */}
+        <div className="vintage-card p-6 mb-6">
+          <h3 className="font-serif font-semibold mb-4 text-foreground">統計</h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">総コツ数</p>
+              <p className="text-2xl font-serif font-semibold text-primary">{tips.length}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">カテゴリー</p>
+              <p className="text-2xl font-serif font-semibold text-primary">{categories.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Quote */}
+        <div className="vintage-card p-6">
+          <Sparkles className="w-6 h-6 text-accent mx-auto mb-4" />
+          <p className="font-serif text-sm text-foreground/80 italic text-center leading-relaxed">
+            「言葉は、思考を可視化する鏡です。鏡を磨き続けることで、自分の思考がより明確に見えてきます。」
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }
