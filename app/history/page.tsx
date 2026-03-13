@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { ProgressChart } from '@/components/ProgressChart';
 
 interface Entry {
   id: string;
@@ -48,11 +49,14 @@ const categoryNames: Record<string, string> = {
   'abduction-lens': 'Abduction Lens',
 };
 
+type ViewMode = 'list' | 'chart';
+
 export default function HistoryPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   useEffect(() => {
     loadEntries();
@@ -136,98 +140,127 @@ export default function HistoryPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Search */}
-        <div className="mb-6">
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="検索..."
-            className="max-w-md"
-          />
+        {/* View Mode Toggle */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            onClick={() => setViewMode('list')}
+            className="flex-1"
+          >
+            <List className="h-4 w-4 mr-2" />
+            リスト
+          </Button>
+          <Button
+            variant={viewMode === 'chart' ? 'default' : 'outline'}
+            onClick={() => setViewMode('chart')}
+            className="flex-1"
+            disabled={entries.length === 0}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            グラフ
+          </Button>
         </div>
 
-        {/* Tag Filter */}
-        {getAllTags().length > 0 && (
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                variant={selectedTag === '' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setSelectedTag('')}
-              >
-                すべて
-              </Badge>
-              {getAllTags().map(tag => (
-                <Badge
-                  key={tag}
-                  variant={selectedTag === tag ? 'default' : 'outline'}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedTag(tag)}
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Chart View */}
+        {viewMode === 'chart' && <ProgressChart entries={entries} />}
 
-        {/* Entries List */}
-        {filteredEntries.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {entries.length === 0
-                  ? 'まだ記録がありません。トレーニングを始めましょう！'
-                  : '検索条件に一致する記録がありません。'}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {filteredEntries.map((entry) => (
-              <Card key={entry.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={categoryColors[entry.category] || 'bg-gray-100 text-gray-800'}>
-                          {categoryNames[entry.category] || entry.category}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(entry.createdAt)}
-                        </span>
-                      </div>
-                      <CardTitle className="text-lg">{entry.promptTitle}</CardTitle>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(entry.id)}
-                      className="text-destructive hover:text-destructive"
+        {/* List View */}
+        {viewMode === 'list' && (
+          <>
+            {/* Search */}
+            <div className="mb-6">
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="検索..."
+                className="max-w-md"
+              />
+            </div>
+
+            {/* Tag Filter */}
+            {getAllTags().length > 0 && (
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={selectedTag === '' ? 'default' : 'outline'}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedTag('')}
+                  >
+                    すべて
+                  </Badge>
+                  {getAllTags().map(tag => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTag === tag ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedTag(tag)}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                    {entry.content}
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Entries List */}
+            {filteredEntries.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    {entries.length === 0
+                      ? 'まだ記録がありません。トレーニングを始めましょう！'
+                      : '検索条件に一致する記録がありません。'}
                   </p>
-                  {entry.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {entry.tags.map(tag => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredEntries.map((entry) => (
+                  <Card key={entry.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={categoryColors[entry.category] || 'bg-gray-100 text-gray-800'}>
+                              {categoryNames[entry.category] || entry.category}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(entry.createdAt)}
+                            </span>
+                          </div>
+                          <CardTitle className="text-lg">{entry.promptTitle}</CardTitle>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(entry.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+                        {entry.content}
+                      </p>
+                      {entry.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {entry.tags.map(tag => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

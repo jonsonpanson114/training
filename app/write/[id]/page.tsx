@@ -69,28 +69,34 @@ export default function WritePage() {
   const generateDynamicPrompt = async (type: string) => {
     setIsGenerating(true);
     try {
-      const { generateAbductionPhenomenon, generateSynapseWords, generateMetaphorConcept, generateAbductionLens } = await import('@/lib/ai');
+      const response = await fetch('/api/ai/generate-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
 
-      if (type === 'abduction') {
-        const phenomenon = await generateAbductionPhenomenon();
+      if (!response.ok) {
+        throw new Error('Failed to generate prompt');
+      }
+
+      const result = await response.json();
+
+      if (type === 'abduction' && result.phenomenon) {
         setDynamicContent({
           title: 'アブダクション道場',
-          description: phenomenon
+          description: result.phenomenon
         });
-      } else if (type === 'synapse') {
-        const words = await generateSynapseWords();
+      } else if (type === 'synapse' && result.word1 && result.word2) {
         setDynamicContent({
           title: 'Synapse Match',
-          description: `「${words.word1}」と「${words.word2}」の共通点を10個見つけてください`
+          description: `「${result.word1}」と「${result.word2}」の共通点を10個見つけてください`
         });
-      } else if (type === 'metaphor') {
-        const concept = await generateMetaphorConcept();
+      } else if (type === 'metaphor' && result.concept) {
         setDynamicContent({
           title: 'Metaphor Maker',
-          description: `「${concept}」をバカでもわかる例え話で説明してください`
+          description: `「${result.concept}」をバカでもわかる例え話で説明してください`
         });
-      } else if (type === 'abduction-lens') {
-        const result = await generateAbductionLens();
+      } else if (type === 'abduction-lens' && result.description) {
         setDynamicContent({
           title: 'Abduction Lens',
           description: result.description,

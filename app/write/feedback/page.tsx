@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { generateVerbalizationFeedback } from '@/lib/ai';
 
 interface Entry {
   id: string;
@@ -57,7 +56,20 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
   const generateFeedback = async (entry: Entry) => {
     setIsLoading(true);
     try {
-      const result = await generateVerbalizationFeedback(entry.content, entry.promptTitle);
+      const response = await fetch('/api/ai/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: entry.content,
+          promptTitle: entry.promptTitle
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate feedback');
+      }
+
+      const result = await response.json();
       setFeedback(result);
     } catch (error) {
       console.error('Failed to generate feedback:', error);
