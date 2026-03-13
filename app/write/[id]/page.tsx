@@ -153,10 +153,11 @@ export default function WritePage() {
           steps: result.steps
         });
       } else if (type === 'fogcatcher' && result.question) {
-        setDynamicContent({
+        setDynamicContent(prev => ({
           title: 'Fog Catcher（思考の霧払い）',
-          description: result.question
-        });
+          description: prev?.description || result.description || result.question,
+          question: result.question
+        }));
       }
     } catch (error) {
       console.error('Failed to generate dynamic prompt:', error);
