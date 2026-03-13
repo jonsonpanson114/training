@@ -29,6 +29,7 @@ export default function WritePage() {
     description: string;
     imageUrl?: string;
     question?: string;
+    challenges?: string[];
     steps?: Array<{ step: number; label: string; placeholder: string }>;
   } | null>(null);
   const [stepInputs, setStepInputs] = useState<StepInput[]>([]);
@@ -44,6 +45,7 @@ export default function WritePage() {
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
+  const [showChallenges, setShowChallenges] = useState(true);
 
   useEffect(() => {
     if (dynamicPrompts[id]) {
@@ -131,7 +133,8 @@ export default function WritePage() {
       } else if (type === 'whysos') {
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
-          description: result.question || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
+          description: result.question || result.challenges?.[0] || '最近感じたイライラの原因をなぜなぜで掘り下げてください。',
+          challenges: result.challenges,
           steps: result.steps || [
             { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
@@ -140,10 +143,12 @@ export default function WritePage() {
             { step: 5, label: '5回目「なぜ？」', placeholder: '根本原因を明確にしてください（20〜40文字）' }
           ]
         });
+        setShowChallenges(true);
       } else if (type === 'sowhat') {
         setDynamicContent({
           title: 'So What?（つまり何？）',
-          description: result.question || '最近読んだニュースの本質を「つまり何？」で掘り下げてください。',
+          description: result.question || result.challenges?.[0] || '最近読んだニュースの本質を「つまり何？」で掘り下げてください。',
+          challenges: result.challenges,
           steps: result.steps || [
             { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
@@ -152,10 +157,12 @@ export default function WritePage() {
             { step: 5, label: '5回目「つまり何？」', placeholder: '本質的な洞察をまとめてください（20〜40文字）' }
           ]
         });
+        setShowChallenges(true);
       } else if (type === '5w1h') {
         setDynamicContent({
           title: '5W1H 展開',
-          description: result.question || '最近の買い物について5W1Hで整理して行動プランを作成してください。',
+          description: result.question || result.challenges?.[0] || '最近の買い物について5W1Hで整理して行動プランを作成してください。',
+          challenges: result.challenges,
           steps: result.steps || [
             { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
             { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
@@ -165,10 +172,12 @@ export default function WritePage() {
             { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
           ]
         });
+        setShowChallenges(true);
       } else if (type === 'prep') {
         setDynamicContent({
           title: 'PREP法',
-          description: result.question || 'リモートワークのメリットをPREP法で伝えてください。',
+          description: result.question || result.challenges?.[0] || 'リモートワークのメリットをPREP法で伝えてください。',
+          challenges: result.challenges,
           steps: result.steps || [
             { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
             { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
@@ -176,12 +185,15 @@ export default function WritePage() {
             { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
           ]
         });
+        setShowChallenges(true);
       } else if (type === 'fogcatcher') {
         setDynamicContent(prev => ({
           title: 'Fog Catcher（思考の霧払い）',
-          description: result.description || prev?.description || '思考や感情を制限なしで自由に書き出してください。',
+          description: result.question || result.challenges?.[0] || prev?.description || '思考や感情を制限なしで自由に書き出してください。',
+          challenges: result.challenges,
           question: result.question
         }));
+        setShowChallenges(true);
       }
     } catch (error) {
       console.error('Failed to generate dynamic prompt:', error);
@@ -231,8 +243,14 @@ export default function WritePage() {
     if (dynamicPrompts[id]) {
       setIsCustomTheme(false);
       setCustomTheme('');
+      setShowChallenges(true);
       await generateDynamicPrompt(id);
     }
+  };
+
+  const handleSelectChallenge = (challenge: string) => {
+    setDynamicContent(prev => prev ? { ...prev, question: challenge } : null);
+    setShowChallenges(false);
   };
 
   const handleUseCustomTheme = () => {
@@ -381,8 +399,35 @@ export default function WritePage() {
             </div>
           )}
 
+          {/* Challenge Selector for training types with challenges */}
+          {showChallenges && dynamicContent?.challenges && dynamicContent.challenges.length > 1 && (
+            <div className="mt-6">
+              <p className="text-sm text-muted-foreground mb-3">テーマを選んでください：</p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {dynamicContent.challenges.map((challenge, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSelectChallenge(challenge)}
+                    className={`
+                      p-4 rounded-xl border text-left transition-all duration-200
+                      ${dynamicContent.question === challenge
+                        ? 'border-accent bg-accent/10 text-foreground shadow-sm'
+                        : 'border-border bg-input hover:border-accent/50 hover:bg-accent/5 text-foreground/80'}
+                    `}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-primary">#{index + 1}</span>
+                      {dynamicContent.question === challenge && <Check className="w-4 h-4 text-accent" />}
+                    </div>
+                    <p className="text-sm">{challenge}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Theme Controls for Dynamic Prompts */}
-          {dynamicPrompts[id] && ['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
+          {dynamicPrompts[id] && (
             <div className="mt-6 pt-6 border-t border-border">
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -394,29 +439,34 @@ export default function WritePage() {
                   <RefreshCw className="w-4 h-4" />
                   新しいお題を生成
                 </Button>
-                <Button
-                  onClick={() => setShowThemeInput(!showThemeInput)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  自分のテーマを使う
-                </Button>
-                {isCustomTheme && (
-                  <Button
-                    onClick={handleResetToAIGenerated}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    AIお題に戻る
-                  </Button>
+                {/* Custom theme buttons only for specific training types */}
+                {['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
+                  <>
+                    <Button
+                      onClick={() => setShowThemeInput(!showThemeInput)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      自分のテーマを使う
+                    </Button>
+                    {isCustomTheme && (
+                      <Button
+                        onClick={handleResetToAIGenerated}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        AIお題に戻る
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Custom Theme Input */}
-              {showThemeInput && (
+              {/* Custom Theme Input - only for specific training types */}
+              {showThemeInput && ['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
                 <div className="mt-4 p-4 bg-input rounded-xl border border-border">
                   <label className="block text-sm font-medium text-foreground mb-2">
                     自分のテーマ（議題）を入力
