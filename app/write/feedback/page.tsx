@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, TrendingUp, Lightbulb, Sparkles, Loader2, BookOpen, Star, Trophy, Award } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Lightbulb, Sparkles, Loader2, BookOpen, Star, Trophy, Award, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
@@ -28,22 +28,48 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
     score: number;
     feedback: string;
     suggestions: string[];
+    followupQuestion?: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCompletion, setShowCompletion] = useState(false);
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    if (entryId) {
-      const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
-      const found = entries.find((e: Entry) => e.id === entryId);
-      if (found) {
-        setEntry(found);
-        generateFeedback(found);
-      } else {
-        setIsLoading(false);
+    async function loadEntry() {
+      if (entryId) {
+        setIsLoading(true);
+        try {
+          const response = await fetch(`/api/records?entryId=${entryId}`);
+          if (!response.ok) throw new Error('Failed to fetch entry');
+          const data = await response.json();
+          
+          const mappedEntry: Entry = {
+            id: data.id,
+            promptId: data.prompt_id || '',
+            promptTitle: data.prompt_title || '言語化トレーニング',
+            category: data.category || 'general',
+            content: data.content,
+            tags: data.tags || [],
+            createdAt: data.created_at,
+          };
+          
+          setEntry(mappedEntry);
+          generateFeedback(mappedEntry);
+        } catch (error) {
+          console.error('Failed to load entry:', error);
+          // Fallback to localStorage if API fails
+          const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
+          const found = entries.find((e: Entry) => e.id === entryId);
+          if (found) {
+            setEntry(found);
+            generateFeedback(found);
+          } else {
+            setIsLoading(false);
+          }
+        }
       }
     }
+    loadEntry();
   }, [entryId]);
 
   useEffect(() => {
@@ -91,6 +117,16 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
 
   const handleContinue = () => {
     router.push('/');
+  };
+
+  const handleDeepDive = () => {
+    if (feedback?.followupQuestion && entry) {
+      const theme = feedback.followupQuestion;
+      // Navigate back to the same training type but with a pre-filled theme
+      // We'll pass it via localStorage or query param
+      localStorage.setItem('verbalize_custom_theme', theme);
+      router.push(`/write/${entry.promptId}`);
+    }
   };
 
   if (isLoading || !entry) {
@@ -190,6 +226,30 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      
+      {/* Follow-up Question Card */}
+      {feedback?.followupQuestion && (
+        <div className="vintage-card p-6 mb-6 animate-slide-up bg-accent/5 border-accent/20 border-2" style={{ animationDelay: '0.25s' }}>
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0 shadow-lg">
+              <MessageSquare className="w-5 h-5 text-background" />
+            </div>
+            <div>
+              <h3 className="font-serif font-semibold text-accent mb-2">思考の深掘り：AIからの問いかけ</h3>
+              <p className="text-foreground leading-relaxed italic text-lg font-medium">
+                「{feedback.followupQuestion}」
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleDeepDive}
+            variant="outline" 
+            className="w-full border-accent/50 hover:bg-accent/10 hover:border-accent text-accent font-bold h-12"
+          >
+            この問いに答えて思考を深める
+          </Button>
         </div>
       )}
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -56,11 +56,24 @@ export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [mounted, setMounted] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadEntries();
+    const savedId = localStorage.getItem('verbalize_user_id');
+    if (savedId) {
+      setUserId(savedId);
+    }
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadEntries();
+    } else if (mounted) {
+      setIsLoading(false);
+    }
+  }, [userId, mounted]);
 
   useEffect(() => {
     let filtered = entries;
@@ -82,21 +95,55 @@ export default function HistoryPage() {
     setFilteredEntries(filtered);
   }, [entries, searchTerm, selectedTag]);
 
-  const loadEntries = () => {
-    const saved = localStorage.getItem('verbalize_entries');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setEntries(parsed);
-      setFilteredEntries(parsed);
+  const loadEntries = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/records?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch entries');
+      const data = await response.json();
+      
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        promptId: item.prompt_id || '',
+        promptTitle: item.prompt_title || '言語化トレーニング',
+        category: item.category || 'general',
+        content: item.content,
+        tags: item.tags || [],
+        createdAt: item.created_at,
+      }));
+      
+      setEntries(mapped);
+      setFilteredEntries(mapped);
+    } catch (error) {
+      console.error('Failed to load entries from API:', error);
+      // Fallback to localStorage
+      const saved = localStorage.getItem('verbalize_entries');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setEntries(parsed);
+        setFilteredEntries(parsed);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('この記録を削除しますか？')) {
-      const updated = entries.filter(e => e.id !== id);
-      setEntries(updated);
-      localStorage.setItem('verbalize_entries', JSON.stringify(updated));
-      localStorage.setItem('verbalize_total', updated.length.toString());
+      try {
+        const response = await fetch(`/api/records?id=${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete');
+        
+        const updated = entries.filter(e => e.id !== id);
+        setEntries(updated);
+        localStorage.setItem('verbalize_entries', JSON.stringify(updated));
+        localStorage.setItem('verbalize_total', updated.length.toString());
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('削除に失敗しました。');
+      }
     }
   };
 
@@ -198,7 +245,12 @@ export default function HistoryPage() {
         )}
 
         {/* Entries List */}
-        {filteredEntries.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+            <p className="text-muted-foreground">読み込み中...</p>
+          </div>
+        ) : filteredEntries.length === 0 ? (
           <div className={`vintage-card p-12 text-center ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <p className="text-foreground font-serif text-xl mb-2">

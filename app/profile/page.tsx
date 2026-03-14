@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { ScoreRing } from '@/components/luxury/ScoreRing';
+import { InsightChart } from '@/components/luxury/InsightChart';
+import { ChartLine, PieChart as PieIcon, BarChart3, Loader2 } from 'lucide-react';
 
 interface Achievement {
   id: string;
@@ -93,10 +95,20 @@ export default function ProfilePage() {
   const [userRank, setUserRank] = useState('言語化のアプレンティス');
   const [userAchievements, setUserAchievements] = useState<Achievement[]>(achievements);
   const [mounted, setMounted] = useState(false);
+  const [chartData, setChartData] = useState<{
+    trend: any[];
+    categories: any[];
+    activity: any[];
+  }>({ trend: [], categories: [], activity: [] });
+  const [isLoadingCharts, setIsLoadingCharts] = useState(true);
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     const savedName = localStorage.getItem('verbalize_username');
     if (savedName) setUserName(savedName);
+
+    const savedId = localStorage.getItem('verbalize_user_id') || '';
+    setUserId(savedId);
 
     const savedTotal = parseInt(localStorage.getItem('verbalize_total') || '0', 10);
     const savedStreak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
@@ -130,6 +142,63 @@ export default function ProfilePage() {
     setUserAchievements(updatedAchievements);
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadChartData();
+    }
+  }, [userId]);
+
+  const loadChartData = async () => {
+    setIsLoadingCharts(true);
+    try {
+      const response = await fetch(`/api/records?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch records');
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        // Process Trend Data (Last 7 days)
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split('T')[0];
+        }).reverse();
+
+        const trend = last7Days.map(date => {
+          const count = data.filter((e: any) => e.created_at.startsWith(date)).length;
+          return { name: date.slice(5), count };
+        });
+
+        // Process Categories Data
+        const categoryCounts: Record<string, number> = {};
+        const categoryNames: Record<string, string> = {
+          whysos: 'Why So', sowhat: 'So What?', '5w1h': '5W1H',
+          prep: 'PREP', fogcatcher: 'FogCatcher', abduction: 'Abduction',
+          synapse: 'Synapse', metaphor: 'Metaphor'
+        };
+
+        data.forEach((e: any) => {
+          const name = categoryNames[e.category] || e.category;
+          categoryCounts[name] = (categoryCounts[name] || 0) + 1;
+        });
+
+        const categories = Object.entries(categoryCounts).map(([name, value]) => ({ name, value }));
+
+        // Process Weekly Activity
+        const days = ['日', '月', '火', '水', '木', '金', '土'];
+        const activity = days.map((name, i) => {
+          const count = data.filter((e: any) => new Date(e.created_at).getDay() === i).length;
+          return { name, count };
+        });
+
+        setChartData({ trend, categories, activity });
+      }
+    } catch (err) {
+      console.error('Chart data error:', err);
+    } finally {
+      setIsLoadingCharts(false);
+    }
+  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -252,6 +321,56 @@ export default function ProfilePage() {
             </div>
             <p className="text-3xl font-serif font-semibold text-foreground">{userLevel}</p>
             <p className="text-sm text-muted-foreground">レベル</p>
+          </div>
+        </div>
+        {/* Insights Section */}
+        <div className={`grid md:grid-cols-2 gap-6 mb-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.15s' }}>
+          <div className="vintage-card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="vintage-icon-container">
+                <ChartLine className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-serif font-semibold text-foreground">トレーニング頻度</h3>
+            </div>
+            {isLoadingCharts ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
+              </div>
+            ) : (
+              <InsightChart data={chartData.trend} type="line" dataKey="count" />
+            )}
+          </div>
+
+          <div className="vintage-card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="vintage-icon-container">
+                <PieIcon className="w-5 h-5 text-accent" />
+              </div>
+              <h3 className="font-serif font-semibold text-foreground">カテゴリー分布</h3>
+            </div>
+            {isLoadingCharts ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
+              </div>
+            ) : (
+              <InsightChart data={chartData.categories} type="pie" dataKey="value" nameKey="name" />
+            )}
+          </div>
+
+          <div className="vintage-card p-6 md:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="vintage-icon-container">
+                <BarChart3 className="w-5 h-5 text-success" />
+              </div>
+              <h3 className="font-serif font-semibold text-foreground">曜日別アクティビティ</h3>
+            </div>
+            {isLoadingCharts ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
+              </div>
+            ) : (
+              <InsightChart data={chartData.activity} type="bar" dataKey="count" />
+            )}
           </div>
         </div>
 

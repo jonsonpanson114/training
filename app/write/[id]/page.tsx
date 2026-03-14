@@ -39,6 +39,15 @@ export default function WritePage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(300);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    const savedId = localStorage.getItem('verbalize_user_id') || `user_${Math.random().toString(36).substr(2, 9)}`;
+    if (!localStorage.getItem('verbalize_user_id')) {
+      localStorage.setItem('verbalize_user_id', savedId);
+    }
+    setUserId(savedId);
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -46,6 +55,21 @@ export default function WritePage() {
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
   const [showPrompts, setShowPrompts] = useState(true);
+
+  useEffect(() => {
+    const deepDiveTheme = localStorage.getItem('verbalize_custom_theme');
+    if (deepDiveTheme && id) {
+      setCustomTheme(deepDiveTheme);
+      setIsCustomTheme(true);
+      setShowPrompts(false);
+      setDynamicContent(prev => prev ? { ...prev, question: deepDiveTheme } : { 
+        title: dynamicPrompts[id]?.title || '深掘りトレーニング',
+        description: deepDiveTheme,
+        question: deepDiveTheme 
+      });
+      localStorage.removeItem('verbalize_custom_theme');
+    }
+  }, [id]);
 
   useEffect(() => {
     if (dynamicPrompts[id]) {
@@ -279,43 +303,66 @@ export default function WritePage() {
 
     setIsSubmitting(true);
 
-    const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
-    const newEntry = {
-      id: Date.now().toString(),
-      promptId: id,
-      promptTitle: prompt?.title || dynamicContent?.title || '',
-      category: prompt?.category || id,
-      content,
-      tags,
-      createdAt: new Date().toISOString(),
-    };
-    entries.push(newEntry);
-    localStorage.setItem('verbalize_entries', JSON.stringify(entries));
+    try {
+      const response = await fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          promptId: id,
+          promptTitle: prompt?.title || dynamicContent?.title || '',
+          category: prompt?.category || id,
+          content,
+          tags,
+        }),
+      });
 
-    const lastEntry = entries[entries.length - 2];
-    const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
-    const today = new Date();
-    let streak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+      if (!response.ok) throw new Error('Failed to save record to Supabase');
 
-    if (lastDate) {
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      const newEntry = await response.json();
 
-      if (lastDate.toDateString() === today.toDateString()) {
-        // Same day - don't increment
-      } else if (lastDate.toDateString() === yesterday.toDateString()) {
-        streak += 1;
+      // Maintain localStorage for streak/total as a backup/sync
+      const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
+      entries.push({
+        id: newEntry.id,
+        promptId: id,
+        promptTitle: prompt?.title || dynamicContent?.title || '',
+        category: prompt?.category || id,
+        content,
+        tags,
+        createdAt: newEntry.created_at,
+      });
+      localStorage.setItem('verbalize_entries', JSON.stringify(entries));
+
+      const lastEntry = entries[entries.length - 2];
+      const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
+      const today = new Date();
+      let streak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+
+      if (lastDate) {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastDate.toDateString() !== today.toDateString()) {
+          if (lastDate.toDateString() === yesterday.toDateString()) {
+            streak += 1;
+          } else {
+            streak = 1;
+          }
+        }
       } else {
         streak = 1;
       }
-    } else {
-      streak = 1;
+
+      localStorage.setItem('verbalize_streak', streak.toString());
+      localStorage.setItem('verbalize_total', entries.length.toString());
+
+      router.push(`/write/feedback?entryId=${newEntry.id}`);
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('記録の保存に失敗しました。');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    localStorage.setItem('verbalize_streak', streak.toString());
-    localStorage.setItem('verbalize_total', entries.length.toString());
-
-    router.push(`/write/feedback?entryId=${newEntry.id}`);
   };
 
   const formatTime = (seconds: number) => {
