@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
+  const client = supabase;
+  if (!isSupabaseConfigured() || !client) {
+    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+  }
+
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
   const entryId = searchParams.get('entryId');
 
   if (entryId) {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('entries')
       .select('*')
       .eq('id', entryId)
@@ -21,7 +26,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('entries')
     .select('*')
     .eq('user_id', userId)
@@ -32,6 +37,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const client = supabase;
+  if (!isSupabaseConfigured() || !client) {
+    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
     const { 
@@ -47,11 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID and content are required' }, { status: 400 });
     }
 
-    // Since our DB table 'entries' might have slightly different columns, 
-    // let's map them. The lib/supabase.ts says:
-    // entries: { Row: { id, user_id, prompt_id, category, content, tags, created_at, updated_at } }
-    
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('entries')
       .insert({
         user_id: userId,
@@ -68,7 +74,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Success - also return the data including the generated ID
     return NextResponse.json(data);
   } catch (error) {
     console.error('API Records POST error:', error);
@@ -77,6 +82,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const client = supabase;
+  if (!isSupabaseConfigured() || !client) {
+    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+  }
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -84,7 +94,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'ID is required' }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const { error } = await client
     .from('entries')
     .delete()
     .eq('id', id);

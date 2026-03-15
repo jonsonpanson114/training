@@ -3,14 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Build-time protection: Only create client if environment variables are present
+// Only create client if environment variables are present to avoid build-time errors
 export const supabase = (supabaseUrl && supabaseAnonKey) 
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : null as any;
+  : null;
 
-if (!supabase) {
-  console.warn('Supabase environment variables are missing. Database features will not work.');
-}
+/**
+ * Returns true if Supabase is properly configured via environment variables.
+ */
+export const isSupabaseConfigured = (): boolean => {
+  return !!(supabaseUrl && supabaseAnonKey && supabase);
+};
 
 // Database types
 export type Database = {
