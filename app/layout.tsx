@@ -19,6 +19,21 @@ const notoSans = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "Verbalize - 言語化トレーニング",
   description: "頭の中にある曖昧な思考を具体的な言葉で表現するトレーニングアプリ",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Verbalize",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  themeColor: "#1A1A1A",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
