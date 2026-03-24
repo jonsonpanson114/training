@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '思考の鉄槌',
-    short_name: '思考の鉄槌',
-    description: '脳内の混沌を一撃で言葉に変える。超実践的言語化訓練。',
+    name: 'Abduction Lens',
+    short_name: 'Abduction Lens',
+    description: '決定的な一瞬を捉え、仮説を紡ぎ出す。阿武妥苦衝（アブダクション）トレーニング。',
     start_url: '/',
     display: 'standalone',
     background_color: '#1A1A1A',

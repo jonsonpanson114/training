@@ -185,10 +185,10 @@ export default function HomePage() {
                 <Leaf className="w-4 h-4 text-primary animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
               <h1 className="text-3xl lg:text-4xl font-serif font-semibold text-foreground tracking-tight">
-                思考の鉄槌
+                Abduction Lens
               </h1>
               <p className="text-muted-foreground mt-2 text-lg">
-                脳内に渦巻く混沌を、一撃で言葉に変える。
+                決定的な一瞬を捉え、仮説を紡ぎ出せ。
               </p>
             </div>
 
@@ -361,9 +361,9 @@ export default function HomePage() {
         <div className={`vintage-card p-6 text-center animate-slide-up ${showGreeting ? '' : 'opacity-0'}`} style={{ animationDelay: '0.7s' }}>
           <Sparkles className="w-6 h-6 text-accent mx-auto mb-4 animate-pulse" />
           <p className="font-serif text-lg text-foreground italic">
-            "言葉は思考を形にする鉄槌。あなたの中に眠る混沌を、今叩き潰し、真実を削り出せ。"
+            "言葉は思考を捉えるレンズ。見慣れた景色から、未知の真実を透過させ、焼き付けろ。"
           </p>
-          <p className="text-sm text-muted-foreground mt-3">— 思考の鉄槌</p>
+          <p className="text-sm text-muted-foreground mt-3">— Abduction Lens</p>
         </div>
       </div>
 

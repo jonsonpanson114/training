@@ -17,12 +17,12 @@ const notoSans = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "思考の鉄槌 - 零秒言語化トレーニング",
-  description: "脳内に渦巻く混沌を、一撃で研ぎ澄まされた言葉に変える。超実践的言語化訓練。",
+  title: "Abduction Lens - 零秒言語化トレーニング",
+  description: "決定的な一瞬を捉え、仮説を紡ぎ出す。阿武妥苦衝（アブダクション）の深淵へ導くトレーニングアプリ。",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "思考の鉄槌",
+    title: "Abduction Lens",
   },
   formatDetection: {
     telephone: false,
