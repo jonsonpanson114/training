@@ -3,13 +3,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.GOOGLE_AI_API_KEY || '';
 
-// Text model - using correct model name
+// Text model - using absolute standard 3.1 model (NO FOSSILS like 1.5/2.0)
 const genAI = new GoogleGenerativeAI(apiKey);
 const textModel = genAI.getGenerativeModel({
-  model: 'gemini-3.1-flash-lite-preview',
+  model: 'gemini-3-flash-preview',
 });
 const imageModel = genAI.getGenerativeModel({
-  model: 'gemini-3.1-flash-lite-preview',
+  model: 'gemini-3-flash-preview',
 });
 
 export async function POST(request: NextRequest) {
@@ -124,15 +124,12 @@ export async function POST(request: NextRequest) {
         try {
           const aiResult = await textModel.generateContent(prompt);
           const description = aiResult.response.text().trim();
-          result = { description };
-
-          try {
-            // More stable image source: Picsum with a seed based on description length or date
-            const seed = Math.floor(Math.random() * 1000);
-            result.imageUrl = `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`;
-          } catch (error) {
-            console.error('Image logic fallback error:', error);
-          }
+          const seed = Math.floor(Math.random() * 1000);
+          
+          result = { 
+            description,
+            imageUrl: `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`
+          };
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);
           const seed = Math.floor(Math.random() * 1000);
