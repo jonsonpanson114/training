@@ -98,7 +98,7 @@ export default function HomePage() {
     },
     {
       id: 'abduction-lens',
-      title: '阿武妥苦衝レンズ',
+      title: 'Abduction Lens',
       icon: Search,
       color: 'bg-indigo-100 text-indigo-700',
       hover: 'hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5',

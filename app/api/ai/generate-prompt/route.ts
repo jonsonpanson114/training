@@ -126,9 +126,9 @@ export async function POST(request: NextRequest) {
           const aiResult = await textModel.generateContent(prompt);
           const description = aiResult.response.text().trim();
           
-          // Native Image Generation using Gemini 3.1 Flash Image
+          // Native Image Generation using Gemini 3.1 Flash Image (Nano Banana 2)
           const imageResult = await imageModel.generateContent(
-            `高解像度のフォトリアルな画像：${description}`
+            `以下の描写を極めて忠実に再現した、高解像度のフォトリアルな画像を生成してください。余計な改変や文字は一切加えず、情景そのものを描き出すこと：\n\n「${description}」`
           );
           
           // Extract base64 from the response
