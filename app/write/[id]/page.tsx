@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw, Plus } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw, Plus, Flame, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,9 @@ export default function WritePage() {
   const [totalTime, setTotalTime] = useState(300);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState<string>('');
+  const [isHardMode, setIsHardMode] = useState(false);
+  const [bannedWords, setBannedWords] = useState<string[]>([]);
+  const [hardModeError, setHardModeError] = useState<string | null>(null);
 
   useEffect(() => {
     let savedId = localStorage.getItem('verbalize_user_id');
@@ -103,6 +106,29 @@ export default function WritePage() {
       }
     }
   }, [id]);
+
+  const generateBannedWords = () => {
+    const commonBanned = [
+      'こと', 'もの', 'とても', 'すごく', '楽しい', '面白い', '思う', '感じ', '自分', '私', 
+      'やっぱり', '本当', '重要', '大切', '必要', 'ため', '理由', '結果', 'つまり', 'そして'
+    ];
+    const shuffled = [...commonBanned].sort(() => 0.5 - Math.random());
+    setBannedWords(shuffled.slice(0, 3));
+  };
+
+  useEffect(() => {
+    if (isHardMode) {
+      generateBannedWords();
+      setTimeLeft(60);
+      setTotalTime(60);
+    } else {
+      setBannedWords([]);
+      // Reset to original time limit
+      const limit = (dynamicPrompts[id]?.timeLimit || fixedPrompts.find(p => p.id === id || p.category === id)?.timeLimit || 5) * 60;
+      setTimeLeft(limit);
+      setTotalTime(limit);
+    }
+  }, [isHardMode, id]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -305,6 +331,16 @@ export default function WritePage() {
   const handleSubmit = async () => {
     if (!content.trim()) return;
 
+    // Hard Mode Validation
+    if (isHardMode) {
+      const foundBanned = bannedWords.filter(word => content.includes(word));
+      if (foundBanned.length > 0) {
+        setHardModeError(`NGワードが含まれています: ${foundBanned.join(', ')}`);
+        return;
+      }
+    }
+    setHardModeError(null);
+
     setIsSubmitting(true);
     const tempId = `local_${Date.now()}`;
     let finalEntryId = tempId;
@@ -329,7 +365,11 @@ export default function WritePage() {
         finalEntryId = newEntry.id;
         createdAt = newEntry.created_at;
       } else {
-        console.warn('API save failed, falling back to local storage');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API save failed:', errorData);
+        // Alert the user with more detail if available
+        const errorMsg = errorData.error || response.statusText;
+        alert(`サーバーへの保存に失敗しました: ${errorMsg}\nローカル保存で続行します。`);
       }
     } catch (error) {
       console.error('Submission error, falling back to local storage:', error);
@@ -447,6 +487,17 @@ export default function WritePage() {
             <div>
               <h1 className="text-2xl font-serif font-semibold text-foreground">言語化トレーニング</h1>
               <p className="text-sm text-muted-foreground">思考を言葉に変える旅</p>
+            </div>
+            {/* Hard Mode Toggle */}
+            <div className="ml-auto">
+              <Button
+                variant={isHardMode ? "default" : "outline"}
+                className={`transition-all duration-500 rounded-xl px-4 flex items-center gap-2 ${isHardMode ? 'bg-danger text-white hover:bg-danger/90 animate-pulse border-danger' : 'border-danger/30 text-danger/70 hover:bg-danger/5'}`}
+                onClick={() => setIsHardMode(!isHardMode)}
+              >
+                <Flame className={`w-4 h-4 ${isHardMode ? 'animate-bounce' : ''}`} />
+                <span className="font-bold text-xs tracking-widest">{isHardMode ? 'HARD MODE ACTIVE' : 'HARD MODE'}</span>
+              </Button>
             </div>
           </div>
         </header>
@@ -676,6 +727,29 @@ export default function WritePage() {
             </div>
           )}
         </div>
+
+        {/* Hard Mode Info */}
+        {isHardMode && (
+          <div className="vintage-card p-4 border-danger/30 bg-danger/5 mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-start gap-4">
+              <div className="vintage-icon-container danger shrink-0">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-danger uppercase tracking-wider mb-2">Hard Mode Restrictions</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs bg-danger/10 text-danger px-2 py-1 rounded border border-danger/20 font-semibold">⏰ タイムリミット: 60秒</span>
+                  {bannedWords.map(word => (
+                    <span key={word} className="text-xs bg-danger/10 text-danger px-2 py-1 rounded border border-danger/20 font-bold">🚫 NG: {word}</span>
+                  ))}
+                </div>
+                {hardModeError && (
+                  <p className="text-xs text-danger mt-3 font-bold animate-pulse">{hardModeError}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Input Area (for regular prompts or fogcatcher) */}
         {!dynamicContent?.steps && (

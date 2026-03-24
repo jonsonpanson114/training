@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter, Loader2, Sparkles, Brain, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +58,9 @@ export default function HistoryPage() {
   const [mounted, setMounted] = useState(false);
   const [userId, setUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [insight, setInsight] = useState<string | null>(null);
+  const [showInsight, setShowInsight] = useState(false);
 
   useEffect(() => {
     const savedId = localStorage.getItem('verbalize_user_id');
@@ -315,6 +318,42 @@ export default function HistoryPage() {
             ))}
           </div>
         )}
+
+        {/* Insight Display Section (Modal-like) */}
+        {showInsight && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="vintage-card w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-primary/20">
+              <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-accent animate-pulse" />
+                  <h3 className="font-serif font-bold text-lg">AI 成長インサイト</h3>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setShowInsight(false)} className="rounded-full">
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="p-6 overflow-auto bg-card/50">
+                {isAnalyzing ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Brain className="w-12 h-12 text-accent animate-pulse mb-4" />
+                    <p className="font-serif italic animate-pulse">お前の言葉の魂を、AIが集計中だ...</p>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="whitespace-pre-wrap font-serif leading-relaxed text-foreground/90 bg-muted/50 p-6 rounded-2xl border border-border/50">
+                      {insight}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-4 border-t border-border flex justify-end">
+                <Button onClick={() => setShowInsight(false)} className="vintage-button-primary">
+                  閉じる
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
@@ -337,6 +376,32 @@ export default function HistoryPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* AI Insight Action */}
+        <div className="vintage-card p-6 mb-6 bg-accent/5 border-accent/20">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-accent" />
+            <h3 className="font-serif font-semibold text-foreground">AI コーチ</h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+            これまでのトレーニング記録をAIが多角的に分析し、お前の「思考の進化」をレポートします。
+          </p>
+          <Button 
+            onClick={handleAnalyze} 
+            disabled={isAnalyzing || entries.length < 3}
+            className="w-full vintage-button-primary group"
+          >
+            {isAnalyzing ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+            )}
+            成長インサイトを生成
+          </Button>
+          {entries.length < 3 && (
+            <p className="text-[10px] text-danger mt-2 text-center">※ あと{3 - entries.length}件の記録が必要です</p>
+          )}
         </div>
 
         <div className="vintage-card p-6">

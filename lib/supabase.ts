@@ -60,6 +60,7 @@ export type Database = {
           id: string;
           user_id: string;
           prompt_id: string | null;
+          prompt_title: string | null;
           category: string;
           content: string;
           tags: string[];
@@ -70,6 +71,7 @@ export type Database = {
           id?: string;
           user_id: string;
           prompt_id?: string | null;
+          prompt_title?: string | null;
           category: string;
           content: string;
           tags?: string[];
@@ -80,6 +82,7 @@ export type Database = {
           id?: string;
           user_id?: string;
           prompt_id?: string | null;
+          prompt_title?: string | null;
           category?: string;
           content?: string;
           tags?: string[];

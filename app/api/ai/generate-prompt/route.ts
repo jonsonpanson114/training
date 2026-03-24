@@ -127,11 +127,30 @@ export async function POST(request: NextRequest) {
           result = { description };
 
           try {
-            // NOTE: Gemini 3.1 Flash does not support native image generation in the way this was intended.
-            // Placeholder for now. If you want images, consider using a separate Image API or keeping this as text-only.
-            result.imageUrl = undefined;
+            // Gemini 3.1 Flash Lite doesn't generate images directly.
+            // We'll use a keyword-based Unsplash placeholder for now.
+            const keywords = description.split(/[、。 ]/).filter(w => w.length > 2).slice(0, 3).join(',');
+            result.imageUrl = `https://images.unsplash.com/photo-1501139083538-0139583c060f?q=80&w=1000&auto=format&fit=crop&sig=${Date.now()}`; 
+            // Better: use a search terms based on description for better variety
+            const searchTerms = encodeURIComponent(description.substring(0, 50));
+            result.imageUrl = `https://source.unsplash.com/featured/?mystery,scene,${searchTerms}`;
+            
+            // Note: source.unsplash.com is deprecated, switching to a more stable placeholder logic
+            result.imageUrl = `https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop`; // Default moody scene
+            
+            // Let's use a themed set of moody Unsplash IDs for variety
+            const moodyImages = [
+              'photo-1501139083538-0139583c060f', // Clock
+              'photo-1518709268805-4e9042af9f23', // Dark hallway
+              'photo-1478720568477-152d9b164e26', // Old theatre
+              'photo-1502134249126-9f3755a50d78', // Moon/Sky
+              'photo-1534447677768-be436bb09401', // Dark forest
+              'photo-1494548162494-384bba4ab999', // Sunrise/Fog
+            ];
+            const randomId = moodyImages[Math.floor(Math.random() * moodyImages.length)];
+            result.imageUrl = `https://images.unsplash.com/${randomId}?q=80&w=800&auto=format&fit=crop`;
           } catch (error) {
-            console.error('Image logic bypassed:', error);
+            console.error('Image logic fallback error:', error);
           }
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);

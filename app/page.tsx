@@ -10,6 +10,7 @@ import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 
 import { calculateLevel, getRankName } from '@/lib/gamification';
 import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
+import { ActivityCalendar } from '@/components/luxury/ActivityCalendar';
 
 export default function HomePage() {
   const [streak, setStreak] = useState(0);
@@ -19,6 +20,7 @@ export default function HomePage() {
   const [userLevel, setUserLevel] = useState(1);
   const [userRank, setUserRank] = useState('思考の種まき');
   const [showGreeting, setShowGreeting] = useState(false);
+  const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([]);
 
   useEffect(() => {
     const savedStreak = localStorage.getItem('verbalize_streak');
@@ -36,6 +38,21 @@ export default function HomePage() {
     setUserRank(getRankName(level));
 
     setTodayPrompt(getDailyPrompt());
+
+    // Fetch activity summary
+    const fetchActivity = async () => {
+      const userId = localStorage.getItem('verbalize_user_id');
+      if (userId) {
+        try {
+          const res = await fetch(`/api/records/summary?userId=${userId}`);
+          const data = await res.json();
+          if (data.summary) setActivityData(data.summary);
+        } catch (err) {
+          console.error('Failed to fetch activity:', err);
+        }
+      }
+    };
+    fetchActivity();
 
     // Show greeting animation
     setTimeout(() => setShowGreeting(true), 500);
@@ -234,34 +251,28 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Daily Quests */}
-          <div className="vintage-card p-6 flex flex-col">
-            <div className="flex items-center gap-2 mb-4">
-              <Target className="w-5 h-5 text-primary" />
-              <h3 className="font-serif font-semibold">Daily Quests</h3>
-            </div>
-            <div className="space-y-4 flex-1">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${totalEntries > 0 ? 'bg-success border-success' : 'border-muted-foreground'}`}>
-                  {totalEntries > 0 && <CheckCircle className="w-3 h-3 text-white" />}
+            {/* Daily Quests */}
+            <div className="vintage-card p-6 flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-5 h-5 text-primary" />
+                <h3 className="font-serif font-semibold">Daily Quests</h3>
+              </div>
+              <div className="space-y-4 flex-1">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${totalEntries > 0 ? 'bg-success border-success' : 'border-muted-foreground'}`}>
+                    {totalEntries > 0 && <CheckCircle className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-sm flex-1">1回トレーニング完了</span>
+                  <span className="text-[10px] font-bold text-accent">+20 EXP</span>
                 </div>
-                <span className="text-sm flex-1">1回トレーニング完了</span>
-                <span className="text-[10px] font-bold text-accent">+20 EXP</span>
+                {/* Calendar Integrated Here */}
+                <div className="mt-4 pt-4 border-t border-border/30">
+                  <ActivityCalendar data={activityData} />
+                </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 opacity-60">
-                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                <span className="text-sm flex-1">累計500文字以上書く</span>
-                <span className="text-[10px] font-bold text-accent">+50 EXP</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 opacity-60">
-                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                <span className="text-sm flex-1">異なるカテゴリを2つ実施</span>
-                <span className="text-[10px] font-bold text-accent">+40 EXP</span>
-              </div>
+              <p className="text-[10px] text-muted-foreground mt-4 text-center italic">クエスト達成で追加ボーナス獲得</p>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-4 text-center italic">クエスト達成で追加ボーナス獲得</p>
           </div>
-        </div>
 
         {/* Quick Stats */}
         <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 ${showGreeting ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>

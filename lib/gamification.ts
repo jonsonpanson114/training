@@ -56,17 +56,17 @@ export function calculateExpGain(content: string, score: number = 70): number {
  */
 export function getRankName(level: number): string {
   const ranks = [
-    '思考の種まき',
-    '言葉の芽生え',
-    '表現のアプレンティス',
-    '言語の職人',
-    '思考の彫刻家',
-    '意味の建築家',
-    '知性の詩人',
-    '言語の錬金術師',
-    '真理の語り手',
-    '言葉のマスター',
-    '無音の哲学者'
+    '思考の迷い子',
+    '言葉を拾いし者',
+    '概念のストライカー',
+    '論理の解体屋',
+    '抽象のギャンブラー',
+    '意味のトリックスター',
+    '知性のデストロイヤー',
+    '真理の密猟者',
+    '言語のテロリスト',
+    '思考の神隠し',
+    '沈黙が似合う男'
   ];
   return ranks[Math.min(Math.floor((level - 1) / 5), ranks.length - 1)];
 }

@@ -19,15 +19,17 @@ export function ThinkingBuddy({ mode = 'home', userRank, feedbackScore, content 
     // Determine message based on mode and stats
     let msg = '';
     if (mode === 'home') {
-      msg = `よう、${userRank || '新入り'}様。今日も思考を研ぎ澄ませる準備はできてるか？言葉にできないモヤモヤ、俺が一緒にぶっ壊してやるよ。`;
+      msg = `よう、${userRank || '新入り'}。今日も適当に思考を散らかしに来たのか？ 言葉にできないモヤモヤ、俺が一緒にぶっ壊してやるよ。`;
     } else if (mode === 'feedback') {
       if (feedbackScore && feedbackScore >= 80) {
-        msg = `ほう、やるじゃないか。スコア ${feedbackScore}点とはな。お前の言葉には、少しずつ『魂』が宿り始めてる気がするぜ。`;
+        msg = `ほう、やるじゃないか。${feedbackScore}点か。お前の言葉には、少しずつ『魂』が宿り始めてる気がするぜ。悪くない。`;
+      } else if (feedbackScore && feedbackScore >= 60) {
+        msg = `${feedbackScore}点か。まあ、及第点だな。だがお前、まだ何か隠してるだろ？ もっと深いところまで潜ってみろよ。`;
       } else {
-        msg = `スコア ${feedbackScore || 0}点か。まあ、最初はこんなもんだ。嘆く暇があったら、次のお題で俺を驚かせてみろ。`;
+        msg = `${feedbackScore || 0}点だ。正直に言って、今のままじゃ話にならない。嘆く暇があったら、次のお題で俺を驚かせてみろ。`;
       }
     } else if (mode === 'write') {
-      msg = `焦るな。思考の源泉から溢れる言葉を、そのまま紙に乗せるんだ。格好つける必要なんて、どこにもないぜ。`;
+      msg = `焦んな。格好つけて複雑なことを言おうとするなよ。思考の源泉から溢れる言葉を、そのままぶちまければいいんだ。`;
     }
 
     setMessage(msg);
