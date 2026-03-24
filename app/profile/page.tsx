@@ -92,7 +92,7 @@ export default function ProfilePage() {
   const [totalEntries, setTotalEntries] = useState(0);
   const [streak, setStreak] = useState(0);
   const [userLevel, setUserLevel] = useState(1);
-  const [userRank, setUserRank] = useState('言語化のアプレンティス');
+  const [userRank, setUserRank] = useState('思考の迷い子');
   const [userAchievements, setUserAchievements] = useState<Achievement[]>(achievements);
   const [mounted, setMounted] = useState(false);
   const [chartData, setChartData] = useState<{
@@ -206,13 +206,12 @@ export default function ProfilePage() {
     localStorage.setItem('verbalize_username', newName);
   };
 
-  const currentRankIndex = Math.min(
-    ranks.findIndex(r => r.title === userRank),
-    ranks.length - 1
-  );
-  const nextRank = ranks[currentRankIndex + 1];
-  const levelProgress = nextRank
-    ? ((totalEntries - ranks[currentRankIndex].level) / (nextRank.level - ranks[currentRankIndex].level)) * 100
+  const currentRankIndex = ranks.findIndex(r => r.title === userRank);
+  const safeRankIndex = currentRankIndex === -1 ? 0 : currentRankIndex;
+  
+  const nextRank = ranks[safeRankIndex + 1];
+  const levelProgress = nextRank 
+    ? ((totalEntries - ranks[safeRankIndex].level) / (nextRank.level - ranks[safeRankIndex].level)) * 100
     : 100;
 
   const unlockedCount = userAchievements.filter(a => a.unlocked).length;
