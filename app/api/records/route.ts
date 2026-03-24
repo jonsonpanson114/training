@@ -4,7 +4,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 export async function GET(request: NextRequest) {
   const client = supabase;
   if (!isSupabaseConfigured() || !client) {
-    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+    return NextResponse.json({ error: 'Database configuration missing. Please check your .env.local' }, { status: 503 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const client = supabase;
   if (!isSupabaseConfigured() || !client) {
-    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+    return NextResponse.json({ error: 'Database configuration missing. Please check your .env.local' }, { status: 503 });
   }
 
   try {
@@ -70,7 +70,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Supabase INSERT error:', error);
+      console.error('Supabase INSERT error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -84,7 +89,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const client = supabase;
   if (!isSupabaseConfigured() || !client) {
-    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
+    return NextResponse.json({ error: 'Database configuration missing. Please check your .env.local' }, { status: 503 });
   }
 
   const { searchParams } = new URL(request.url);

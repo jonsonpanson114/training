@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { ScoreRing } from '@/components/luxury/ScoreRing';
 import { CompletionEffect } from '@/components/luxury/CompletionEffect';
+import { calculateExpGain } from '@/lib/gamification';
+import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
+import { Info } from 'lucide-react';
 
 interface Entry {
   id: string;
@@ -19,9 +22,9 @@ interface Entry {
   tags: string[];
   createdAt: string;
 }
-
 function FeedbackContent({ entryId }: { entryId: string | null }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [entry, setEntry] = useState<Entry | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -30,6 +33,7 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
     suggestions: string[];
     followupQuestion?: string;
   } | null>(null);
+  const [expGained, setExpGained] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showCompletion, setShowCompletion] = useState(false);
   const [showContent, setShowContent] = useState(false);
@@ -99,6 +103,7 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
 
       const result = await response.json();
       setFeedback(result);
+      setExpGained(calculateExpGain(entry.content, result.score));
     } catch (error) {
       console.error('Failed to generate feedback:', error);
       setFeedback({
@@ -167,8 +172,16 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
         </div>
 
         {/* Score Ring */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-6 relative">
           <ScoreRing score={feedback?.score || 75} size={240} strokeWidth={14} />
+          {expGained > 0 && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-in fade-in zoom-in duration-1000 delay-500">
+               <span className="text-4xl font-serif font-bold text-accent">{feedback?.score || 75}</span>
+               <div className="mt-12 bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-bold border border-accent/30">
+                 +{expGained} EXP
+               </div>
+            </div>
+          )}
         </div>
 
         {/* Score Label */}
@@ -299,6 +312,12 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
         <TrendingUp className="mr-2 h-5 w-5" />
         次のお題に進む
       </Button>
+
+      <ThinkingBuddy 
+        mode="feedback" 
+        feedbackScore={feedback?.score} 
+        content={entry.content} 
+      />
     </>
   );
 }

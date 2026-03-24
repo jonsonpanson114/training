@@ -127,18 +127,11 @@ export async function POST(request: NextRequest) {
           result = { description };
 
           try {
-            const imagePrompt = `Photorealistic scene: ${description}. Cinematic lighting, mysterious atmosphere, high detail, 4K quality.`;
-            const imageResult = await imageModel.generateContent([{ text: imagePrompt }]);
-            const imageData = imageResult.response.candidates?.[0]?.content?.parts?.[0];
-            if (imageData && 'inlineData' in imageData) {
-              const base64Data = imageData.inlineData?.data;
-              if (base64Data) {
-                const mimeType = imageData.inlineData?.mimeType || 'image/png';
-                result.imageUrl = `data:${mimeType};base64,${base64Data}`;
-              }
-            }
+            // NOTE: Gemini 3.1 Flash does not support native image generation in the way this was intended.
+            // Placeholder for now. If you want images, consider using a separate Image API or keeping this as text-only.
+            result.imageUrl = undefined;
           } catch (error) {
-            console.error('Image generation failed:', error);
+            console.error('Image logic bypassed:', error);
           }
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);

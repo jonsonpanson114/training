@@ -8,33 +8,32 @@ import { getDailyPrompt } from '@/lib/prompts';
 import { Prompt } from '@/types';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 
+import { calculateLevel, getRankName } from '@/lib/gamification';
+import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
+
 export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [totalEntries, setTotalEntries] = useState(0);
+  const [totalExp, setTotalExp] = useState(0);
   const [todayPrompt, setTodayPrompt] = useState<Prompt | null>(null);
   const [userLevel, setUserLevel] = useState(1);
-  const [userRank, setUserRank] = useState('言語化のアプレンティス');
+  const [userRank, setUserRank] = useState('思考の種まき');
   const [showGreeting, setShowGreeting] = useState(false);
 
   useEffect(() => {
     const savedStreak = localStorage.getItem('verbalize_streak');
     const savedTotal = localStorage.getItem('verbalize_total');
+    const savedExp = localStorage.getItem('verbalize_exp');
+    
     if (savedStreak) setStreak(parseInt(savedStreak, 10));
     if (savedTotal) setTotalEntries(parseInt(savedTotal, 10));
+    
+    const exp = savedExp ? parseInt(savedExp, 10) : (savedTotal ? parseInt(savedTotal, 10) * 30 : 0);
+    setTotalExp(exp);
 
-    const level = Math.floor(totalEntries / 10) + 1;
+    const level = calculateLevel(exp);
     setUserLevel(level);
-
-    const ranks = [
-      '言語化のアプレンティス',
-      '言葉の職人',
-      '思考の彫刻家',
-      '言語の錬金術師',
-      '意味の建築家',
-      '知性の詩人',
-      '真のマスター'
-    ];
-    setUserRank(ranks[Math.min(level - 1, ranks.length - 1)]);
+    setUserRank(getRankName(level));
 
     setTodayPrompt(getDailyPrompt());
 
@@ -178,9 +177,19 @@ export default function HomePage() {
 
             {/* User Panel */}
             <div className="vintage-card px-5 py-3 flex items-center gap-4 hover:shadow-lg transition-shadow duration-300">
-              <div>
-                <p className="text-sm text-muted-foreground">GOLIATH_USER</p>
-                <p className="font-semibold">LV.{userLevel} · {userRank}</p>
+              <div className="flex-1">
+                <div className="flex justify-between items-end mb-1">
+                  <p className="text-sm text-muted-foreground uppercase tracking-wider">GOLIATH_USER</p>
+                  <p className="text-[10px] font-bold text-accent">LV.{userLevel}</p>
+                </div>
+                <p className="font-serif font-semibold text-sm mb-2">{userRank}</p>
+                {/* EXP Bar */}
+                <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-accent transition-all duration-1000" 
+                    style={{ width: `${(totalExp % 100)}%` }}
+                  />
+                </div>
               </div>
               <div className="vintage-icon-container primary relative">
                 <User className="w-5 h-5 text-background" />
@@ -191,38 +200,66 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Today's Task */}
-        <div className={`vintage-card p-6 lg:p-8 mb-8 relative overflow-hidden ${showGreeting ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
-          {/* Decorative background */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-accent/10 to-transparent rounded-tr-full" />
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="vintage-icon-container accent animate-pulse">
-                <Lightbulb className="w-5 h-5 text-background" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground uppercase tracking-wider">Today's Task</p>
-                <h2 className="text-xl font-serif font-semibold">
-                  {todayPrompt?.title || 'Fog Catcher'}
-                </h2>
+        {/* Quests Section */}
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 ${showGreeting ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.05s' }}>
+          <div className="lg:col-span-2">
+            {/* Today's Task (Existing) */}
+            <div className="vintage-card p-6 lg:p-8 relative overflow-hidden h-full">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="vintage-icon-container accent animate-pulse">
+                    <Lightbulb className="w-5 h-5 text-background" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Today's Task</p>
+                    <h2 className="text-xl font-serif font-semibold">
+                      {todayPrompt?.title || 'Fog Catcher'}
+                    </h2>
+                  </div>
+                </div>
+                <div className="bg-input rounded-xl p-5 mb-6 border border-border/50 hover:border-primary/50 transition-colors duration-300">
+                  <p className="text-sm text-muted-foreground mb-2">お題：</p>
+                  <p className="text-lg leading-relaxed">
+                    {todayPrompt?.description || '人生における「無駄」の定義を言語化せよ。'}
+                  </p>
+                </div>
+                <Link href={todayPrompt ? `/write/${todayPrompt.id}` : '/write/basic'}>
+                  <Button className="vintage-button-primary w-full lg:w-auto min-w-[200px] group">
+                    トレーニングを開始
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
               </div>
             </div>
+          </div>
 
-            <div className="bg-input rounded-xl p-5 mb-6 border border-border/50 hover:border-primary/50 transition-colors duration-300">
-              <p className="text-sm text-muted-foreground mb-2">お題：</p>
-              <p className="text-lg leading-relaxed">
-                {todayPrompt?.description || '人生における「無駄」の定義を言語化せよ。'}
-              </p>
+          {/* Daily Quests */}
+          <div className="vintage-card p-6 flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="w-5 h-5 text-primary" />
+              <h3 className="font-serif font-semibold">Daily Quests</h3>
             </div>
-
-            <Link href={todayPrompt ? `/write/${todayPrompt.id}` : '/write/basic'}>
-              <Button className="vintage-button-primary w-full lg:w-auto min-w-[200px] group">
-                トレーニングを開始
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            <div className="space-y-4 flex-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${totalEntries > 0 ? 'bg-success border-success' : 'border-muted-foreground'}`}>
+                  {totalEntries > 0 && <CheckCircle className="w-3 h-3 text-white" />}
+                </div>
+                <span className="text-sm flex-1">1回トレーニング完了</span>
+                <span className="text-[10px] font-bold text-accent">+20 EXP</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 opacity-60">
+                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
+                <span className="text-sm flex-1">累計500文字以上書く</span>
+                <span className="text-[10px] font-bold text-accent">+50 EXP</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 opacity-60">
+                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
+                <span className="text-sm flex-1">異なるカテゴリを2つ実施</span>
+                <span className="text-[10px] font-bold text-accent">+40 EXP</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-4 text-center italic">クエスト達成で追加ボーナス獲得</p>
           </div>
         </div>
 
@@ -393,6 +430,8 @@ export default function HomePage() {
           </div>
         </div>
       </aside>
+
+      <ThinkingBuddy mode="home" userRank={userRank} />
     </div>
   );
 }

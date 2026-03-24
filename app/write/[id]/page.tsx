@@ -12,6 +12,8 @@ import { Prompt } from '@/types';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { LuxuryTimer } from '@/components/luxury/LuxuryTimer';
 import { LuxuryInputArea } from '@/components/luxury/LuxuryInputArea';
+import { calculateExpGain } from '@/lib/gamification';
+import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
 
 interface StepInput {
   step: number;
@@ -42,8 +44,10 @@ export default function WritePage() {
   const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
-    const savedId = localStorage.getItem('verbalize_user_id') || `user_${Math.random().toString(36).substr(2, 9)}`;
-    if (!localStorage.getItem('verbalize_user_id')) {
+    let savedId = localStorage.getItem('verbalize_user_id');
+    if (!savedId || savedId.startsWith('user_')) {
+      // Create a valid UUID-like string if not present
+      savedId = crypto.randomUUID?.() || '00000000-0000-0000-0000-000000000000';
       localStorage.setItem('verbalize_user_id', savedId);
     }
     setUserId(savedId);
@@ -302,6 +306,9 @@ export default function WritePage() {
     if (!content.trim()) return;
 
     setIsSubmitting(true);
+    const tempId = `local_${Date.now()}`;
+    let finalEntryId = tempId;
+    let createdAt = new Date().toISOString();
 
     try {
       const response = await fetch('/api/records', {
@@ -317,23 +324,40 @@ export default function WritePage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save record to Supabase');
+      if (response.ok) {
+        const newEntry = await response.json();
+        finalEntryId = newEntry.id;
+        createdAt = newEntry.created_at;
+      } else {
+        console.warn('API save failed, falling back to local storage');
+      }
+    } catch (error) {
+      console.error('Submission error, falling back to local storage:', error);
+    }
 
-      const newEntry = await response.json();
+    try {
+      // Calculate and save EXP
+      const expGain = calculateExpGain(content);
+      const currentExp = parseInt(localStorage.getItem('verbalize_exp') || '0', 10);
+      localStorage.setItem('verbalize_exp', (currentExp + expGain).toString());
 
-      // Maintain localStorage for streak/total as a backup/sync
+      // Maintain localStorage for entries
       const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
-      entries.push({
-        id: newEntry.id,
+      const newEntryObject = {
+        id: finalEntryId,
         promptId: id,
         promptTitle: prompt?.title || dynamicContent?.title || '',
         category: prompt?.category || id,
         content,
         tags,
-        createdAt: newEntry.created_at,
-      });
+        createdAt: createdAt,
+        isOffline: finalEntryId.startsWith('local_')
+      };
+      
+      entries.push(newEntryObject);
       localStorage.setItem('verbalize_entries', JSON.stringify(entries));
 
+      // Update streak and total
       const lastEntry = entries[entries.length - 2];
       const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
       const today = new Date();
@@ -356,10 +380,10 @@ export default function WritePage() {
       localStorage.setItem('verbalize_streak', streak.toString());
       localStorage.setItem('verbalize_total', entries.length.toString());
 
-      router.push(`/write/feedback?entryId=${newEntry.id}`);
+      router.push(`/write/feedback?entryId=${finalEntryId}`);
     } catch (error) {
-      console.error('Submission error:', error);
-      alert('記録の保存に失敗しました。');
+      console.error('Final submission processing error:', error);
+      alert('記録の処理中にエラーが発生しました。');
     } finally {
       setIsSubmitting(false);
     }
@@ -757,6 +781,8 @@ export default function WritePage() {
           </div>
         </div>
       </aside>
+
+      <ThinkingBuddy mode="write" />
     </div>
   );
 }
