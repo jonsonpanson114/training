@@ -83,6 +83,8 @@ export default function HomePage() {
       badge: 'AI生成',
       highlighted: true
     },
+    {
+      id: 'abduction-lens',
       title: 'Abduction Lens (アブダクション道場)',
       icon: Search,
       color: 'bg-indigo-100 text-indigo-700',
