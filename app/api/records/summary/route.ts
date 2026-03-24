@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -9,8 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
-  const supabase = createClient();
-  if (!supabase) {
+  if (!isSupabaseConfigured() || !supabase) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 

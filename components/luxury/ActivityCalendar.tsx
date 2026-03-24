@@ -44,7 +44,7 @@ export const ActivityCalendar: React.FC<ActivityCalendarProps> = ({ data }) => {
               <TooltipTrigger asChild>
                 <div 
                   className={`
-                    aspect-square rounded-sm transition-all duration-500 
+                    group relative aspect-square rounded-sm transition-all duration-500 
                     ${getIntensityClass(day.count)}
                     ${day.isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
                     hover:scale-110 hover:z-10 cursor-default

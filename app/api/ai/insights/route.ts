@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -10,8 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const supabase = createClient();
-    if (!supabase) {
+    if (!isSupabaseConfigured() || !supabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Standard stable model
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' }); // Using latest Gemini 3.1 as standard
 
     const prompt = `
 あなたは「Verbalize」という言語化トレーニングアプリのAIコーチです。
