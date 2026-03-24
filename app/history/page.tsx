@@ -131,6 +131,35 @@ export default function HistoryPage() {
     }
   };
 
+  const handleAnalyze = async () => {
+    if (!userId || isAnalyzing) return;
+    
+    setIsAnalyzing(true);
+    setShowInsight(true);
+    setInsight(null);
+    
+    try {
+      const response = await fetch('/api/ai/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || '分析に失敗しました');
+      }
+      
+      const data = await response.json();
+      setInsight(data.insight || data.message);
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      setInsight(error.message || '分析中にエラーが発生しました。時間を置いて再度試してください。');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm('この記録を削除しますか？')) {
       try {

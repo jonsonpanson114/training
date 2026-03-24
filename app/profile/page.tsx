@@ -78,13 +78,13 @@ const achievements: Achievement[] = [
 ];
 
 const ranks = [
-  { level: 1, title: '言語化のアプレンティス', color: '#8B7355' },
-  { level: 5, title: '言葉の職人', color: '#A89175' },
-  { level: 10, title: '思考の彫刻家', color: '#C9A96E' },
-  { level: 20, title: '言語の錬金術師', color: '#D4AF37' },
-  { level: 50, title: '意味の建築家', color: '#E8C547' },
-  { level: 100, title: '知性の詩人', color: '#FFD700' },
-  { level: 200, title: '真のマスター', color: '#FFEA00' }
+  { level: 1, title: '思考の迷い子', color: '#8B7355' },
+  { level: 5, title: '言葉を拾いし者', color: '#A89175' },
+  { level: 10, title: '概念のストライカー', color: '#C9A96E' },
+  { level: 20, title: '論理の解体屋', color: '#D4AF37' },
+  { level: 50, title: '抽象のギャンブラー', color: '#E8C547' },
+  { level: 100, title: '知性のデストロイヤー', color: '#FFD700' },
+  { level: 200, title: '沈黙が似合う男', color: '#FFEA00' }
 ];
 
 export default function ProfilePage() {

@@ -18,7 +18,7 @@ export default function HomePage() {
   const [totalExp, setTotalExp] = useState(0);
   const [todayPrompt, setTodayPrompt] = useState<Prompt | null>(null);
   const [userLevel, setUserLevel] = useState(1);
-  const [userRank, setUserRank] = useState('思考の種まき');
+  const [userRank, setUserRank] = useState('思考の迷い子');
   const [showGreeting, setShowGreeting] = useState(false);
   const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([]);
 
