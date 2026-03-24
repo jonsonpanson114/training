@@ -127,23 +127,9 @@ export async function POST(request: NextRequest) {
           result = { description };
 
           try {
-            // Moody Unsplash collection IDs
-            const topics = ['mystery', 'dark', 'midnight', 'noir', 'urban-exploration'];
-            const topic = topics[Math.floor(Math.random() * topics.length)];
-            const cacheBuster = Date.now();
-            result.imageUrl = `https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop&sig=${cacheBuster}`; 
-
-            // Better variety: moody images
-            const moodyIds = [
-              'photo-1501139083538-0139583c060f', // Clock
-              'photo-1518709268805-4e9042af9f23', // Dark hallway
-              'photo-1478720568477-152d9b164e26', // Old theatre
-              'photo-1502134249126-9f3755a50d78', // Moon/Sky
-              'photo-1534447677768-be436bb09401', // Dark forest
-              'photo-1494548162494-384bba4ab999'  // Fog
-            ];
-            const randomId = moodyIds[Math.floor(Math.random() * moodyIds.length)];
-            result.imageUrl = `https://images.unsplash.com/${randomId}?auto=format&fit=crop&q=80&w=800&sig=${cacheBuster}`;
+            // More stable image source: Picsum with a seed based on description length or date
+            const seed = Math.floor(Math.random() * 1000);
+            result.imageUrl = `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`;
           } catch (error) {
             console.error('Image logic fallback error:', error);
           }

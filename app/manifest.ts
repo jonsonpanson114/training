@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Verbalize',
-    short_name: 'Verbalize',
-    description: '思考を言葉に変える言語化トレーニングアプリ',
+    name: '思考の鉄槌',
+    short_name: '思考の鉄槌',
+    description: '脳内の混沌を一撃で言葉に変える。超実践的言語化訓練。',
     start_url: '/',
     display: 'standalone',
     background_color: '#1A1A1A',

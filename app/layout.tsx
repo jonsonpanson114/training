@@ -17,12 +17,12 @@ const notoSans = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Verbalize - 言語化トレーニング",
-  description: "頭の中にある曖昧な思考を具体的な言葉で表現するトレーニングアプリ",
+  title: "思考の鉄槌 - 零秒言語化トレーニング",
+  description: "脳内に渦巻く混沌を、一撃で研ぎ澄まされた言葉に変える。超実践的言語化訓練。",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Verbalize",
+    title: "思考の鉄槌",
   },
   formatDetection: {
     telephone: false,

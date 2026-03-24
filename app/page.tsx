@@ -98,11 +98,11 @@ export default function HomePage() {
     },
     {
       id: 'abduction-lens',
-      title: 'Abduction Lens',
+      title: '阿武妥苦衝レンズ',
       icon: Search,
       color: 'bg-indigo-100 text-indigo-700',
       hover: 'hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5',
-      badge: 'AI生成',
+      badge: '★ 本日の推薦',
       highlighted: true
     },
     // Thinking Training
@@ -185,10 +185,10 @@ export default function HomePage() {
                 <Leaf className="w-4 h-4 text-primary animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
               <h1 className="text-3xl lg:text-4xl font-serif font-semibold text-foreground tracking-tight">
-                Zero-Second Training
+                思考の鉄槌
               </h1>
               <p className="text-muted-foreground mt-2 text-lg">
-                思考の刹那を、言葉に。
+                脳内に渦巻く混沌を、一撃で言葉に変える。
               </p>
             </div>
 
@@ -361,9 +361,9 @@ export default function HomePage() {
         <div className={`vintage-card p-6 text-center animate-slide-up ${showGreeting ? '' : 'opacity-0'}`} style={{ animationDelay: '0.7s' }}>
           <Sparkles className="w-6 h-6 text-accent mx-auto mb-4 animate-pulse" />
           <p className="font-serif text-lg text-foreground italic">
-            "言葉は思考を形にする魔法。あなたの中に眠る魔法使いを、今目覚めさせましょう。"
+            "言葉は思考を形にする鉄槌。あなたの中に眠る混沌を、今叩き潰し、真実を削り出せ。"
           </p>
-          <p className="text-sm text-muted-foreground mt-3">— Verbalize</p>
+          <p className="text-sm text-muted-foreground mt-3">— 思考の鉄槌</p>
         </div>
       </div>
 
