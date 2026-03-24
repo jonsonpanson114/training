@@ -135,8 +135,10 @@ export async function POST(request: NextRequest) {
           }
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);
+          const seed = Math.floor(Math.random() * 1000);
           result = {
-            description: '公園のベンチに置き去られた高級なハンドバッグ。周囲には誰もおらず、風が強く吹き抜けている'
+            description: '公園のベンチに置き去られた高級なハンドバッグ。周囲には誰もおらず、風が強く吹き抜けている',
+            imageUrl: `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`
           };
         }
         break;
