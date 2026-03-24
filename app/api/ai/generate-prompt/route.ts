@@ -3,13 +3,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.GOOGLE_AI_API_KEY || '';
 
-// Text model - using absolute standard 3.1 model (NO FOSSILS like 1.5/2.0)
+// Text model - absolute standard 3.1 (NO FOSSILS like 1.5/2.0)
 const genAI = new GoogleGenerativeAI(apiKey);
 const textModel = genAI.getGenerativeModel({
   model: 'gemini-3-flash-preview',
 });
+// Special Image Generation Model (Nano Banana 2)
 const imageModel = genAI.getGenerativeModel({
-  model: 'gemini-3-flash-preview',
+  model: 'gemini-3.1-flash-image-preview',
 });
 
 export async function POST(request: NextRequest) {
@@ -124,12 +125,27 @@ export async function POST(request: NextRequest) {
         try {
           const aiResult = await textModel.generateContent(prompt);
           const description = aiResult.response.text().trim();
-          const seed = Math.floor(Math.random() * 1000);
           
-          result = { 
-            description,
-            imageUrl: `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`
-          };
+          // Native Image Generation using Gemini 3.1 Flash Image
+          const imageResult = await imageModel.generateContent(
+            `高解像度のフォトリアルな画像：${description}`
+          );
+          
+          // Extract base64 from the response
+          const imagePart = imageResult.response.candidates?.[0].content.parts.find(p => p.inlineData);
+          if (imagePart?.inlineData) {
+            result = { 
+              description,
+              imageUrl: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`
+            };
+          } else {
+            // Fallback (just in case model doesn't return image)
+            const seed = Math.floor(Math.random() * 1000);
+            result = { 
+              description,
+              imageUrl: `https://picsum.photos/seed/${seed}/800/600?grayscale&blur=1`
+            };
+          }
         } catch (error) {
           console.error('AI generation error for abduction-lens:', error);
           const seed = Math.floor(Math.random() * 1000);
