@@ -11,6 +11,7 @@ import { ScoreRing } from '@/components/luxury/ScoreRing';
 import { CompletionEffect } from '@/components/luxury/CompletionEffect';
 import { calculateExpGain } from '@/lib/gamification';
 import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
+import { suggestNextStep } from '@/lib/engagement';
 
 interface Entry {
   id: string;
@@ -131,6 +132,12 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
       router.push(`/write/${entry.promptId}`);
     }
   };
+
+  const nextStepSuggestion = suggestNextStep({
+    score: feedback?.score,
+    suggestions: feedback?.suggestions,
+    category: entry?.category,
+  });
 
   if (isLoading || !entry) {
     return (
@@ -263,6 +270,18 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
           </Button>
         </div>
       )}
+
+      <div className="vintage-card p-6 mb-6 animate-slide-up bg-primary/5 border-primary/20 border-2" style={{ animationDelay: '0.28s' }}>
+        <div className="flex items-start gap-3">
+          <div className="vintage-icon-container primary shrink-0">
+            <TrendingUp className="w-5 h-5 text-background" />
+          </div>
+          <div>
+            <h3 className="font-serif font-semibold text-foreground mb-2">次の一歩（AI提案）</h3>
+            <p className="text-foreground/80 leading-relaxed">{nextStepSuggestion}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Entry Summary */}
       <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>

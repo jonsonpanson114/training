@@ -11,6 +11,15 @@ import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { calculateLevel, getRankName } from '@/lib/gamification';
 import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
 import { ActivityCalendar } from '@/components/luxury/ActivityCalendar';
+import {
+  getAvailableFreeze,
+  getTodayAndYesterdayComparison,
+  getTodayKey,
+  getTodayMiniPrompt,
+  type DailyBadge,
+  type EntryLike,
+} from '@/lib/engagement';
+import { loadReminderSettings, scheduleSessionReminders, sendMissedReminderOnOpen } from '@/lib/reminders';
 
 export default function HomePage() {
   const [streak] = useState(() => {
@@ -32,6 +41,40 @@ export default function HomePage() {
   const userRank = getRankName(userLevel);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([]);
+  const [todayMiniPrompt] = useState(() => getTodayMiniPrompt());
+  const [todayDone] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]') as EntryLike[];
+    const todayKey = getTodayKey();
+    return entries.some((e) => typeof e.createdAt === 'string' && e.createdAt.startsWith(todayKey));
+  });
+  const [freezeCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    return getAvailableFreeze();
+  });
+  const [todayBadge] = useState<DailyBadge | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const todayKey = getTodayKey();
+    const badgeRaw = localStorage.getItem(`verbalize_badge_${todayKey}`);
+    if (!badgeRaw) return null;
+    try {
+      return JSON.parse(badgeRaw) as DailyBadge;
+    } catch {
+      return null;
+    }
+  });
+  const [compare] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { charDelta: 0, sentenceDelta: 0, specificityDelta: 0 };
+    }
+    const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]') as EntryLike[];
+    const snapshot = getTodayAndYesterdayComparison(entries);
+    return {
+      charDelta: snapshot.todayChars - snapshot.yesterdayChars,
+      sentenceDelta: snapshot.todaySentences - snapshot.yesterdaySentences,
+      specificityDelta: snapshot.todaySpecificity - snapshot.yesterdaySpecificity,
+    };
+  });
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -47,7 +90,11 @@ export default function HomePage() {
       }
     };
     fetchActivity();
-  }, []);
+    const settings = loadReminderSettings();
+    sendMissedReminderOnOpen(settings, todayDone);
+    const cleanup = scheduleSessionReminders(settings, todayDone);
+    return cleanup;
+  }, [todayDone]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowGreeting(true), 500);
@@ -229,6 +276,22 @@ export default function HomePage() {
                     {todayPrompt?.description || '人生における「無駄」の定義を言語化せよ。'}
                   </p>
                 </div>
+                <div className="bg-accent/5 rounded-xl p-4 mb-6 border border-accent/20">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">3分デイリー</p>
+                    {todayDone ? (
+                      <span className="text-[10px] font-bold text-success">完了済み</span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-accent">未達成</span>
+                    )}
+                  </div>
+                  <p className="text-sm leading-relaxed">{todayMiniPrompt}</p>
+                  <Link href="/write/basic?mode=quick&daily=1">
+                    <Button variant="outline" className="mt-3 w-full lg:w-auto border-accent/40">
+                      今日の1問を3分でやる
+                    </Button>
+                  </Link>
+                </div>
                 <Link href={todayPrompt ? `/write/${todayPrompt.id}` : '/write/basic'}>
                   <Button className="vintage-button-primary w-full lg:w-auto min-w-[200px] group">
                     トレーニングを開始
@@ -253,6 +316,20 @@ export default function HomePage() {
                   <span className="text-sm flex-1">1回トレーニング完了</span>
                   <span className="text-[10px] font-bold text-accent">+20 EXP</span>
                 </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${freezeCount > 0 ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                    {freezeCount > 0 && <Sparkles className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-sm flex-1">ストリークお守り（週1）</span>
+                  <span className="text-[10px] font-bold text-accent">{freezeCount} 回</span>
+                </div>
+                {todayBadge && (
+                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/30">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Today Badge</p>
+                    <p className="text-sm font-semibold text-foreground">{todayBadge.title}</p>
+                    <p className="text-xs text-muted-foreground">{todayBadge.description}</p>
+                  </div>
+                )}
                 {/* Calendar Integrated Here */}
                 <div className="mt-4 pt-4 border-t border-border/30">
                   <ActivityCalendar data={activityData} />
@@ -302,6 +379,20 @@ export default function HomePage() {
               <span className="text-sm text-muted-foreground">所要時間</span>
             </div>
             <p className="text-3xl font-serif font-semibold">5-10<span className="text-base ml-1">分</span></p>
+          </div>
+        </div>
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ${showGreeting ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.25s' }}>
+          <div className="vintage-card p-4">
+            <p className="text-xs text-muted-foreground mb-1">昨日比 文字数</p>
+            <p className="text-2xl font-serif font-semibold">{compare.charDelta >= 0 ? '+' : ''}{compare.charDelta}</p>
+          </div>
+          <div className="vintage-card p-4">
+            <p className="text-xs text-muted-foreground mb-1">昨日比 文数</p>
+            <p className="text-2xl font-serif font-semibold">{compare.sentenceDelta >= 0 ? '+' : ''}{compare.sentenceDelta}</p>
+          </div>
+          <div className="vintage-card p-4">
+            <p className="text-xs text-muted-foreground mb-1">具体性スコア差</p>
+            <p className="text-2xl font-serif font-semibold">{compare.specificityDelta >= 0 ? '+' : ''}{compare.specificityDelta}</p>
           </div>
         </div>
 
@@ -399,6 +490,24 @@ export default function HomePage() {
               <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
                 <Sparkles className="w-4 h-4 mr-2 text-accent" />
                 アブダクション道場
+              </Button>
+            </Link>
+            <Link href="/write/basic?mode=quick">
+              <Button variant="outline" className="w-full justify-start text-sm group">
+                <Zap className="w-4 h-4 mr-2" />
+                3分モード
+              </Button>
+            </Link>
+            <Link href="/write/basic?mode=deep">
+              <Button variant="outline" className="w-full justify-start text-sm group">
+                <Brain className="w-4 h-4 mr-2" />
+                深掘りモード
+              </Button>
+            </Link>
+            <Link href="/write/emotion?mode=reflect">
+              <Button variant="outline" className="w-full justify-start text-sm group">
+                <Heart className="w-4 h-4 mr-2" />
+                感情整理モード
               </Button>
             </Link>
             <Link href="/write/synapse">

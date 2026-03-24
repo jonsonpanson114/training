@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, X, List, Target, ChevronRight, Check, RefreshCw, Plus, Flame, AlertCircle } from 'lucide-react';
@@ -15,6 +15,7 @@ import { LuxuryTimer } from '@/components/luxury/LuxuryTimer';
 import { LuxuryInputArea } from '@/components/luxury/LuxuryInputArea';
 import { calculateExpGain } from '@/lib/gamification';
 import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
+import { decideDailyBadge, getAvailableFreeze, getTodayKey, getTodayMiniPrompt, markFreezeUsed } from '@/lib/engagement';
 
 interface StepInput {
   step: number;
@@ -23,8 +24,10 @@ interface StepInput {
 
 export default function WritePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const id = params.id as string;
+  const isDailyMode = searchParams.get('daily') === '1';
 
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [dynamicContent, setDynamicContent] = useState<{
@@ -41,6 +44,7 @@ export default function WritePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(300);
+  const [baseTimeSeconds, setBaseTimeSeconds] = useState(300);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState<string>('');
   const [isHardMode, setIsHardMode] = useState(false);
@@ -58,10 +62,27 @@ export default function WritePage() {
   }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [trainingMode, setTrainingMode] = useState<'standard' | 'quick' | 'deep' | 'reflect'>('standard');
   const [currentStep, setCurrentStep] = useState(0);
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
+
+  const getModeAdjustedTime = (baseSeconds: number, mode: 'standard' | 'quick' | 'deep' | 'reflect') => {
+    if (mode === 'quick') return 180;
+    if (mode === 'deep') return Math.max(baseSeconds, 900);
+    if (mode === 'reflect') return Math.max(baseSeconds, 420);
+    return baseSeconds;
+  };
+
+  useEffect(() => {
+    const modeParam = searchParams.get('mode');
+    if (modeParam === 'quick' || modeParam === 'deep' || modeParam === 'reflect') {
+      setTrainingMode(modeParam);
+      return;
+    }
+    setTrainingMode('standard');
+  }, [searchParams]);
 
   useEffect(() => {
     const deepDiveTheme = localStorage.getItem('verbalize_custom_theme');
@@ -84,23 +105,20 @@ export default function WritePage() {
         description: dynamicPrompts[id].description
       });
       const timeLimit = dynamicPrompts[id].timeLimit * 60;
-      setTimeLeft(timeLimit);
-      setTotalTime(timeLimit);
+      setBaseTimeSeconds(timeLimit);
       generateDynamicPrompt(id);
     } else {
       const found = fixedPrompts.find(p => p.id === id || p.category === id);
       if (found) {
         setPrompt(found);
         const timeLimit = found.timeLimit * 60;
-        setTimeLeft(timeLimit);
-        setTotalTime(timeLimit);
+        setBaseTimeSeconds(timeLimit);
       } else {
         const random = getRandomPrompt(id === 'basic' || id === 'emotion' || id === 'work' || id === 'abduction' ? id : undefined);
         if (random) {
           setPrompt(random);
           const timeLimit = random.timeLimit * 60;
-          setTimeLeft(timeLimit);
-          setTotalTime(timeLimit);
+          setBaseTimeSeconds(timeLimit);
         }
       }
     }
@@ -122,12 +140,12 @@ export default function WritePage() {
       setTotalTime(60);
     } else {
       setBannedWords([]);
-      // Reset to original time limit
-      const limit = (dynamicPrompts[id]?.timeLimit || fixedPrompts.find(p => p.id === id || p.category === id)?.timeLimit || 5) * 60;
+      const limit = getModeAdjustedTime(baseTimeSeconds, trainingMode);
       setTimeLeft(limit);
       setTotalTime(limit);
     }
-  }, [isHardMode, id]);
+    setIsTimerRunning(false);
+  }, [isHardMode, baseTimeSeconds, trainingMode]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -393,20 +411,30 @@ export default function WritePage() {
       const lastEntry = entries[entries.length - 2];
       const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
       const today = new Date();
-      let streak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+      const currentStreak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+      let streak = currentStreak;
 
       if (lastDate) {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (lastDate.toDateString() !== today.toDateString()) {
-          if (lastDate.toDateString() === yesterday.toDateString()) {
-            streak += 1;
-          } else {
-            streak = 1;
-          }
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const lastStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+        const diffDays = Math.round((todayStart.getTime() - lastStart.getTime()) / 86400000);
+
+        if (diffDays === 1) {
+          streak = currentStreak + 1;
+        } else if (diffDays === 2 && getAvailableFreeze(today) > 0) {
+          streak = currentStreak + 1;
+          markFreezeUsed(today);
+        } else if (diffDays > 1) {
+          streak = 1;
         }
       } else {
         streak = 1;
+      }
+
+      const badge = decideDailyBadge({ content, tags, isHardMode });
+      localStorage.setItem(`verbalize_badge_${getTodayKey(today)}`, JSON.stringify(badge));
+      if (isDailyMode) {
+        localStorage.setItem(`verbalize_daily_completed_${getTodayKey(today)}`, '1');
       }
 
       localStorage.setItem('verbalize_streak', streak.toString());
@@ -454,7 +482,9 @@ export default function WritePage() {
   }
 
   const displayTitle = prompt?.title || dynamicContent?.title || '言語化トレーニング';
-  const displayDescription = dynamicContent?.question || dynamicContent?.description || '';
+  const displayDescription = isDailyMode
+    ? getTodayMiniPrompt()
+    : dynamicContent?.question || dynamicContent?.description || '';
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
@@ -473,6 +503,11 @@ export default function WritePage() {
             <div>
               <h1 className="text-2xl font-serif font-semibold text-foreground">言語化トレーニング</h1>
               <p className="text-sm text-muted-foreground">思考を言葉に変える旅</p>
+            </div>
+            <div className="hidden lg:flex items-center gap-2 ml-4">
+              <Button variant={trainingMode === 'quick' ? 'default' : 'outline'} size="sm" onClick={() => setTrainingMode('quick')}>3分</Button>
+              <Button variant={trainingMode === 'deep' ? 'default' : 'outline'} size="sm" onClick={() => setTrainingMode('deep')}>深掘り</Button>
+              <Button variant={trainingMode === 'reflect' ? 'default' : 'outline'} size="sm" onClick={() => setTrainingMode('reflect')}>感情整理</Button>
             </div>
             {/* Hard Mode Toggle */}
             <div className="ml-auto">
@@ -844,6 +879,10 @@ export default function WritePage() {
               <span className={`font-semibold ${dynamicContent?.steps ? 'text-primary' : 'text-muted-foreground'}`}>
                 {dynamicContent?.steps ? `${currentStep + 1} / ${stepInputs.length}` : '-'}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">モード</span>
+              <span className="font-semibold capitalize">{trainingMode}</span>
             </div>
           </div>
         </div>

@@ -2,12 +2,22 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, User, Award, Flame, BookOpen, Target, Trophy, Settings, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Award, Flame, BookOpen, Target, Trophy, Settings, LogOut, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 import { InsightChart } from '@/components/luxury/InsightChart';
 import { ChartLine, PieChart as PieIcon, BarChart3, Loader2, LucideIcon } from 'lucide-react';
+import { generateWeeklyReport, type EntryLike, type WeeklyReport } from '@/lib/engagement';
+import {
+  getNotificationPermission,
+  loadReminderSettings,
+  requestReminderPermission,
+  saveReminderSettings,
+  sendPushTest,
+  subscribePush,
+  unsubscribePush,
+} from '@/lib/reminders';
 
 interface Achievement {
   id: string;
@@ -108,6 +118,50 @@ export default function ProfilePage() {
   }>({ trend: [], categories: [], activity: [] });
   const [isLoadingCharts, setIsLoadingCharts] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [weeklyReport, setWeeklyReport] = useState<WeeklyReport | null>(null);
+  const [remindersEnabled, setRemindersEnabled] = useState(() => loadReminderSettings().enabled);
+  const [morningHour, setMorningHour] = useState(() => loadReminderSettings().morningHour);
+  const [eveningHour, setEveningHour] = useState(() => loadReminderSettings().eveningHour);
+  const [notificationPermission, setNotificationPermission] = useState(() => getNotificationPermission());
+  const [reminderMessage, setReminderMessage] = useState('');
+
+  const persistReminderSettings = (enabled: boolean, morning: number, evening: number) => {
+    const saved = saveReminderSettings({
+      enabled,
+      morningHour: morning,
+      eveningHour: evening,
+    });
+    setRemindersEnabled(saved.enabled);
+    setMorningHour(saved.morningHour);
+    setEveningHour(saved.eveningHour);
+  };
+
+  const handleToggleReminder = async () => {
+    if (!userId) {
+      setReminderMessage('ユーザーIDが未設定です。');
+      return;
+    }
+
+    const nextEnabled = !remindersEnabled;
+    persistReminderSettings(nextEnabled, morningHour, eveningHour);
+
+    if (nextEnabled) {
+      const result = await subscribePush(userId, {
+        enabled: true,
+        morningHour,
+        eveningHour,
+      });
+      setReminderMessage(result.message);
+      setNotificationPermission(getNotificationPermission());
+      if (!result.ok) {
+        persistReminderSettings(false, morningHour, eveningHour);
+      }
+      return;
+    }
+
+    const result = await unsubscribePush(userId);
+    setReminderMessage(result.message);
+  };
 
   useEffect(() => {
     const savedName = localStorage.getItem('verbalize_username');
@@ -118,6 +172,7 @@ export default function ProfilePage() {
 
     const savedTotal = parseInt(localStorage.getItem('verbalize_total') || '0', 10);
     const savedStreak = parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+    const localEntries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]') as EntryLike[];
 
     setTotalEntries(savedTotal);
     setStreak(savedStreak);
@@ -146,6 +201,7 @@ export default function ProfilePage() {
     });
 
     setUserAchievements(updatedAchievements);
+    setWeeklyReport(generateWeeklyReport(localEntries));
     setMounted(true);
   }, []);
 
@@ -329,6 +385,40 @@ export default function ProfilePage() {
           </div>
         </div>
         {/* Insights Section */}
+        {weeklyReport && (
+          <div className={`vintage-card p-6 mb-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.12s' }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="vintage-icon-container primary">
+                <ChartLine className="w-5 h-5 text-background" />
+              </div>
+              <h3 className="font-serif font-semibold text-foreground">週次レポート</h3>
+            </div>
+            <div className="grid md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-input rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">記録数</p>
+                <p className="text-xl font-serif font-semibold">{weeklyReport.entries}</p>
+              </div>
+              <div className="bg-input rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">活動日数</p>
+                <p className="text-xl font-serif font-semibold">{weeklyReport.activeDays}日</p>
+              </div>
+              <div className="bg-input rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">平均文字数</p>
+                <p className="text-xl font-serif font-semibold">{weeklyReport.avgChars}</p>
+              </div>
+              <div className="bg-input rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">主カテゴリ</p>
+                <p className="text-xl font-serif font-semibold">{weeklyReport.topCategory}</p>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm">
+              <p><span className="font-semibold">強み:</span> {weeklyReport.strengths}</p>
+              <p><span className="font-semibold">課題:</span> {weeklyReport.challenge}</p>
+              <p><span className="font-semibold">次の一手:</span> {weeklyReport.nextAction}</p>
+            </div>
+          </div>
+        )}
+
         <div className={`grid md:grid-cols-2 gap-6 mb-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`} style={{ animationDelay: '0.15s' }}>
           <div className="vintage-card p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -469,11 +559,70 @@ export default function ProfilePage() {
       <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
         <div className="vintage-card p-6 mb-6">
           <h3 className="font-serif font-semibold mb-4 text-foreground">設定</h3>
-          <div className="space-y-2">
-            <Button variant="outline" className="w-full justify-start text-sm">
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2"><Bell className="w-4 h-4" />毎日リマインド</span>
+              <Button
+                size="sm"
+                variant={remindersEnabled ? 'default' : 'outline'}
+                onClick={handleToggleReminder}
+              >
+                {remindersEnabled ? 'ON' : 'OFF'}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-muted-foreground">
+                朝
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={morningHour}
+                  onChange={(e) => persistReminderSettings(remindersEnabled, Number(e.target.value), eveningHour)}
+                  className="mt-1 w-full rounded-md border border-border bg-input px-2 py-1 text-foreground"
+                />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                夜
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={eveningHour}
+                  onChange={(e) => persistReminderSettings(remindersEnabled, morningHour, Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-border bg-input px-2 py-1 text-foreground"
+                />
+              </label>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-sm"
+              onClick={async () => {
+                const permission = await requestReminderPermission();
+                setNotificationPermission(permission);
+              }}
+            >
               <Settings className="w-4 h-4 mr-2" />
-              アプリ設定
+              通知許可: {notificationPermission}
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-sm"
+              onClick={async () => {
+                if (!userId) {
+                  setReminderMessage('ユーザーIDが未設定です。');
+                  return;
+                }
+                const result = await sendPushTest(userId);
+                setReminderMessage(result.message);
+              }}
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              テスト通知を送る
+            </Button>
+            {reminderMessage && (
+              <p className="text-xs text-muted-foreground leading-relaxed">{reminderMessage}</p>
+            )}
             <Button variant="outline" className="w-full justify-start text-sm text-danger hover:bg-danger/10">
               <LogOut className="w-4 h-4 mr-2" />
               データをリセット
