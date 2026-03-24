@@ -11,19 +11,20 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get('userId');
   const entryId = searchParams.get('entryId');
 
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
+
   if (entryId) {
     const { data, error } = await client
       .from('entries')
       .select('*')
       .eq('id', entryId)
+      .eq('user_id', userId)
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data);
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
   const { data, error } = await client
@@ -35,6 +36,11 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data || []);
 }
+
+type ErrorWithMessageAndStack = {
+  message?: string;
+  stack?: string;
+};
 
 export async function POST(request: NextRequest) {
   const client = supabase;
@@ -86,11 +92,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const safeError = error as ErrorWithMessageAndStack;
     console.error('API Records POST error:', error);
     return NextResponse.json({ 
-      error: error.message || 'Internal Server Error',
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: safeError.message || 'Internal Server Error',
+      stack: process.env.NODE_ENV === 'development' ? safeError.stack : undefined
     }, { status: 500 });
   }
 }
@@ -103,15 +110,17 @@ export async function DELETE(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
+  const userId = searchParams.get('userId');
 
-  if (!id) {
-    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'ID and user ID are required' }, { status: 400 });
   }
 
   const { error } = await client
     .from('entries')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

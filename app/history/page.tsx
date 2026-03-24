@@ -18,6 +18,20 @@ interface Entry {
   createdAt: string;
 }
 
+interface ApiEntry {
+  id: string;
+  prompt_id: string | null;
+  prompt_title: string | null;
+  category: string | null;
+  content: string;
+  tags: string[] | null;
+  created_at: string;
+}
+
+type ErrorWithMessage = {
+  message?: string;
+};
+
 const categoryColors: Record<string, string> = {
   basic: 'bg-blue-100 text-blue-800',
   emotion: 'bg-purple-100 text-purple-800',
@@ -105,7 +119,7 @@ export default function HistoryPage() {
       if (!response.ok) throw new Error('Failed to fetch entries');
       const data = await response.json();
       
-      const mapped = data.map((item: any) => ({
+      const mapped = (data as ApiEntry[]).map((item) => ({
         id: item.id,
         promptId: item.prompt_id || '',
         promptTitle: item.prompt_title || '言語化トレーニング',
@@ -152,9 +166,10 @@ export default function HistoryPage() {
       
       const data = await response.json();
       setInsight(data.insight || data.message);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const safeError = error as ErrorWithMessage;
       console.error('Analysis error:', error);
-      setInsight(error.message || '分析中にエラーが発生しました。時間を置いて再度試してください。');
+      setInsight(safeError.message || '分析中にエラーが発生しました。時間を置いて再度試してください。');
     } finally {
       setIsAnalyzing(false);
     }
@@ -163,7 +178,7 @@ export default function HistoryPage() {
   const handleDelete = async (id: string) => {
     if (confirm('この記録を削除しますか？')) {
       try {
-        const response = await fetch(`/api/records?id=${id}`, {
+        const response = await fetch(`/api/records?id=${id}&userId=${userId}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete');

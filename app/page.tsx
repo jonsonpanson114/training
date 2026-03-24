@@ -70,15 +70,6 @@ export default function HomePage() {
     },
     // AI-Generated Training (The Important Ones!)
     {
-      id: 'abduction',
-      title: 'アブダクション道場',
-      icon: Puzzle,
-      color: 'bg-amber-100 text-amber-700',
-      hover: 'hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg hover:-translate-y-0.5',
-      badge: 'AI生成',
-      highlighted: true
-    },
-    {
       id: 'synapse',
       title: 'Synapse Match',
       icon: Infinity,

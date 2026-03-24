@@ -127,8 +127,9 @@ export async function POST(request: NextRequest) {
           const description = aiResult.response.text().trim();
           
           // Native Image Generation using Gemini 3.1 Flash Image (Nano Banana 2)
+          // Strengthened prompt for alignment
           const imageResult = await imageModel.generateContent(
-            `以下の描写を極めて忠実に再現した、高解像度のフォトリアルな画像を生成してください。余計な改変や文字は一切加えず、情景そのものを描き出すこと：\n\n「${description}」`
+            `【厳守】以下の描写を完璧に写し出した、写実的で芸術的な高解像度写真を生成してください。文字や透かしは絶対に含めないこと。情景の細部まで忠実に再現してください：\n\n「${description}」`
           );
           
           // Extract base64 from the response
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
             };
           } else {
             // Fallback (just in case model doesn't return image)
+            console.warn('Multimodal output missing, using fallback Picsum');
             const seed = Math.floor(Math.random() * 1000);
             result = { 
               description,
