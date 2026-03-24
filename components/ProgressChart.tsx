@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 
 interface Entry {
@@ -17,6 +17,11 @@ interface Entry {
 interface ProgressChartProps {
   entries: Entry[];
 }
+
+type PieLabelProps = {
+  category?: string;
+  percent?: number;
+};
 
 const categoryColors: Record<string, string> = {
   basic: '#3b82f6',
@@ -210,7 +215,9 @@ export function ProgressChart({ entries }: ProgressChartProps) {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ category, percent }: any) => `${category} ${(percent * 100).toFixed(0)}%`}
+                  label={({ category, percent }: PieLabelProps) =>
+                    `${category || ''} ${((percent || 0) * 100).toFixed(0)}%`
+                  }
                   labelLine={false}
                 >
                   {categoryData.map((entry, index) => (

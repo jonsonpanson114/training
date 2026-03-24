@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface LuxuryTimerProps {
@@ -12,11 +11,7 @@ interface LuxuryTimerProps {
 }
 
 export function LuxuryTimer({ timeLeft, totalTime, onStart, onPause, onReset }: LuxuryTimerProps) {
-  const [isRunning, setIsRunning] = useState(false);
-
-  useEffect(() => {
-    setIsRunning(timeLeft < totalTime && timeLeft > 0);
-  }, [timeLeft, totalTime]);
+  const isRunning = timeLeft < totalTime && timeLeft > 0;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -67,10 +62,7 @@ export function LuxuryTimer({ timeLeft, totalTime, onStart, onPause, onReset }: 
             <>
               {!isRunning ? (
                 <button
-                  onClick={() => {
-                    onStart();
-                    setIsRunning(true);
-                  }}
+                  onClick={onStart}
                   className="vintage-button-primary flex items-center gap-2"
                 >
                   <Play className="w-5 h-5" />
@@ -78,10 +70,7 @@ export function LuxuryTimer({ timeLeft, totalTime, onStart, onPause, onReset }: 
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    onPause();
-                    setIsRunning(false);
-                  }}
+                  onClick={onPause}
                   className="vintage-button-secondary flex items-center gap-2"
                 >
                   <Pause className="w-5 h-5" />
@@ -92,10 +81,7 @@ export function LuxuryTimer({ timeLeft, totalTime, onStart, onPause, onReset }: 
           )}
 
           <button
-            onClick={() => {
-              onReset();
-              setIsRunning(false);
-            }}
+            onClick={onReset}
             className="vintage-button-secondary flex items-center gap-2"
           >
             <RotateCcw className="w-5 h-5" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Clock, Lightbulb, User, ArrowRight, Flame, BookOpen, Zap, FileText, Heart, HelpCircle, Sparkles, Leaf, CheckCircle, Lightbulb as Bulb, Puzzle, Brain, Search, Target, List, Infinity } from 'lucide-react';
+import { Home, Clock, Lightbulb, User, ArrowRight, Flame, BookOpen, Zap, FileText, Heart, HelpCircle, Sparkles, Leaf, CheckCircle, Brain, Search, Target, List, Infinity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getDailyPrompt } from '@/lib/prompts';
 import { Prompt } from '@/types';
@@ -13,33 +13,27 @@ import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
 import { ActivityCalendar } from '@/components/luxury/ActivityCalendar';
 
 export default function HomePage() {
-  const [streak, setStreak] = useState(0);
-  const [totalEntries, setTotalEntries] = useState(0);
-  const [totalExp, setTotalExp] = useState(0);
-  const [todayPrompt, setTodayPrompt] = useState<Prompt | null>(null);
-  const [userLevel, setUserLevel] = useState(1);
-  const [userRank, setUserRank] = useState('思考の迷い子');
+  const [streak] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    return parseInt(localStorage.getItem('verbalize_streak') || '0', 10);
+  });
+  const [totalEntries] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    return parseInt(localStorage.getItem('verbalize_total') || '0', 10);
+  });
+  const [totalExp] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const savedTotal = parseInt(localStorage.getItem('verbalize_total') || '0', 10);
+    const savedExp = localStorage.getItem('verbalize_exp');
+    return savedExp ? parseInt(savedExp, 10) : savedTotal * 30;
+  });
+  const [todayPrompt] = useState<Prompt | null>(() => getDailyPrompt());
+  const userLevel = calculateLevel(totalExp);
+  const userRank = getRankName(userLevel);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([]);
 
   useEffect(() => {
-    const savedStreak = localStorage.getItem('verbalize_streak');
-    const savedTotal = localStorage.getItem('verbalize_total');
-    const savedExp = localStorage.getItem('verbalize_exp');
-    
-    if (savedStreak) setStreak(parseInt(savedStreak, 10));
-    if (savedTotal) setTotalEntries(parseInt(savedTotal, 10));
-    
-    const exp = savedExp ? parseInt(savedExp, 10) : (savedTotal ? parseInt(savedTotal, 10) * 30 : 0);
-    setTotalExp(exp);
-
-    const level = calculateLevel(exp);
-    setUserLevel(level);
-    setUserRank(getRankName(level));
-
-    setTodayPrompt(getDailyPrompt());
-
-    // Fetch activity summary
     const fetchActivity = async () => {
       const userId = localStorage.getItem('verbalize_user_id');
       if (userId) {
@@ -53,10 +47,12 @@ export default function HomePage() {
       }
     };
     fetchActivity();
+  }, []);
 
-    // Show greeting animation
-    setTimeout(() => setShowGreeting(true), 500);
-  }, [totalEntries]);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowGreeting(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const trainingCategories = [
     // Basic Training
@@ -176,8 +172,9 @@ export default function HomePage() {
                 <Leaf className="w-4 h-4 text-primary animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
               <h1 className="text-3xl lg:text-4xl font-serif font-semibold text-foreground tracking-tight">
-                Abduction Lens
+                零秒言語化トレーニング
               </h1>
+              <p className="text-accent font-bold mt-1 tracking-widest text-xs uppercase">Powered by Abduction Lens</p>
               <p className="text-muted-foreground mt-2 text-lg">
                 決定的な一瞬を捉え、仮説を紡ぎ出せ。
               </p>
@@ -220,7 +217,7 @@ export default function HomePage() {
                     <Lightbulb className="w-5 h-5 text-background" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Today's Task</p>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider">Today&apos;s Task</p>
                     <h2 className="text-xl font-serif font-semibold">
                       {todayPrompt?.title || 'Fog Catcher'}
                     </h2>
@@ -352,7 +349,7 @@ export default function HomePage() {
         <div className={`vintage-card p-6 text-center animate-slide-up ${showGreeting ? '' : 'opacity-0'}`} style={{ animationDelay: '0.7s' }}>
           <Sparkles className="w-6 h-6 text-accent mx-auto mb-4 animate-pulse" />
           <p className="font-serif text-lg text-foreground italic">
-            "言葉は思考を捉えるレンズ。見慣れた景色から、未知の真実を透過させ、焼き付けろ。"
+            &quot;言葉は思考を捉えるレンズ。見慣れた景色から、未知の真実を透過させ、焼き付けろ。&quot;
           </p>
           <p className="text-sm text-muted-foreground mt-3">— Abduction Lens</p>
         </div>

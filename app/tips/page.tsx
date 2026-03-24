@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Lightbulb, Target, Brain, BookOpen, Zap, Sparkles, Award } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Target, Brain, BookOpen, Zap, Sparkles, Award, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
 
@@ -77,7 +77,7 @@ const categoryColors: Record<string, string> = {
   仮説思考: 'bg-yellow-100 text-yellow-800',
 };
 
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, LucideIcon> = {
   基本: Target,
   発想力: Sparkles,
   思考整理: Brain,
@@ -202,7 +202,7 @@ export default function TipsPage() {
         <div className="vintage-card p-6 mb-6">
           <h3 className="font-serif font-semibold mb-4 text-foreground">カテゴリー</h3>
           <nav className="space-y-2">
-            {categories.map((category, index) => {
+            {categories.map((category) => {
               const CategoryIcon = categoryIcons[category];
               return (
                 <a

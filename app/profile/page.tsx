@@ -1,23 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, User, Award, Flame, BookOpen, Target, Trophy, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FloatingParticles } from '@/components/luxury/FloatingParticles';
-import { ScoreRing } from '@/components/luxury/ScoreRing';
 import { InsightChart } from '@/components/luxury/InsightChart';
-import { ChartLine, PieChart as PieIcon, BarChart3, Loader2 } from 'lucide-react';
+import { ChartLine, PieChart as PieIcon, BarChart3, Loader2, LucideIcon } from 'lucide-react';
 
 interface Achievement {
   id: string;
   title: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   unlocked: boolean;
   progress: number;
   target: number;
+}
+
+type ChartPoint = Record<string, string | number | undefined>;
+
+interface ApiRecord {
+  category: string;
+  created_at: string;
 }
 
 const achievements: Achievement[] = [
@@ -96,9 +102,9 @@ export default function ProfilePage() {
   const [userAchievements, setUserAchievements] = useState<Achievement[]>(achievements);
   const [mounted, setMounted] = useState(false);
   const [chartData, setChartData] = useState<{
-    trend: any[];
-    categories: any[];
-    activity: any[];
+    trend: ChartPoint[];
+    categories: ChartPoint[];
+    activity: ChartPoint[];
   }>({ trend: [], categories: [], activity: [] });
   const [isLoadingCharts, setIsLoadingCharts] = useState(true);
   const [userId, setUserId] = useState<string>('');
@@ -143,13 +149,7 @@ export default function ProfilePage() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (userId) {
-      loadChartData();
-    }
-  }, [userId]);
-
-  const loadChartData = async () => {
+  const loadChartData = useCallback(async () => {
     setIsLoadingCharts(true);
     try {
       const response = await fetch(`/api/records?userId=${userId}`);
@@ -165,7 +165,7 @@ export default function ProfilePage() {
         }).reverse();
 
         const trend = last7Days.map(date => {
-          const count = data.filter((e: any) => e.created_at.startsWith(date)).length;
+          const count = (data as ApiRecord[]).filter((e) => e.created_at.startsWith(date)).length;
           return { name: date.slice(5), count };
         });
 
@@ -177,7 +177,7 @@ export default function ProfilePage() {
           synapse: 'Synapse', metaphor: 'Metaphor'
         };
 
-        data.forEach((e: any) => {
+        (data as ApiRecord[]).forEach((e) => {
           const name = categoryNames[e.category] || e.category;
           categoryCounts[name] = (categoryCounts[name] || 0) + 1;
         });
@@ -187,7 +187,7 @@ export default function ProfilePage() {
         // Process Weekly Activity
         const days = ['日', '月', '火', '水', '木', '金', '土'];
         const activity = days.map((name, i) => {
-          const count = data.filter((e: any) => new Date(e.created_at).getDay() === i).length;
+          const count = (data as ApiRecord[]).filter((e) => new Date(e.created_at).getDay() === i).length;
           return { name, count };
         });
 
@@ -198,7 +198,13 @@ export default function ProfilePage() {
     } finally {
       setIsLoadingCharts(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      loadChartData();
+    }
+  }, [userId, loadChartData]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -386,7 +392,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userAchievements.map((achievement, index) => (
+            {userAchievements.map((achievement) => (
               <div
                 key={achievement.id}
                 className={`p-4 rounded-xl border transition-all duration-300 ${

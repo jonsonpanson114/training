@@ -2,6 +2,10 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+type ErrorWithMessage = {
+  message?: string;
+};
+
 export async function POST(request: Request) {
   try {
     const { userId } = await request.json();
@@ -66,8 +70,9 @@ ${historyText}
     const text = response.text();
 
     return NextResponse.json({ insight: text });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const safeError = error as ErrorWithMessage;
     console.error('Insight generation error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: safeError.message || 'Insight generation failed' }, { status: 500 });
   }
 }

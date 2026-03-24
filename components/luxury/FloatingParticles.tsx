@@ -7,28 +7,32 @@ interface Particle {
   x: number;
   y: number;
   size: number;
-  speedX: number;
-  speedY: number;
   opacity: number;
+  animationDurationSec: number;
+  animationDelaySec: number;
 }
 
 export function FloatingParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    const newParticles: Particle[] = [];
-    for (let i = 0; i < 20; i++) {
-      newParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 4 + 1,
-        speedX: (Math.random() - 0.5) * 0.1,
-        speedY: (Math.random() - 0.5) * 0.1,
-        opacity: Math.random() * 0.3 + 0.1,
-      });
-    }
-    setParticles(newParticles);
+    const timer = setTimeout(() => {
+      const newParticles: Particle[] = [];
+      for (let i = 0; i < 20; i += 1) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 4 + 1,
+          opacity: Math.random() * 0.3 + 0.1,
+          animationDurationSec: 20 + Math.random() * 10,
+          animationDelaySec: Math.random() * 5,
+        });
+      }
+      setParticles(newParticles);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -44,8 +48,8 @@ export function FloatingParticles() {
             height: `${particle.size}px`,
             background: 'radial-gradient(circle, #8B7355 0%, transparent 70%)',
             opacity: particle.opacity,
-            animation: `float ${20 + Math.random() * 10}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 5}s`,
+            animation: `float ${particle.animationDurationSec}s ease-in-out infinite`,
+            animationDelay: `${particle.animationDelaySec}s`,
           }}
         />
       ))}

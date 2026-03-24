@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, Pen, X, List, Target, ChevronRight, Check, RefreshCw, Plus, Flame, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Send, Loader2, Sparkles, BookOpen, Lightbulb, X, List, Target, ChevronRight, Check, RefreshCw, Plus, Flame, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -61,14 +62,12 @@ export default function WritePage() {
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
-  const [showPrompts, setShowPrompts] = useState(true);
 
   useEffect(() => {
     const deepDiveTheme = localStorage.getItem('verbalize_custom_theme');
     if (deepDiveTheme && id) {
       setCustomTheme(deepDiveTheme);
       setIsCustomTheme(true);
-      setShowPrompts(false);
       setDynamicContent(prev => prev ? { ...prev, question: deepDiveTheme } : { 
         title: dynamicPrompts[id]?.title || '深掘りトレーニング',
         description: deepDiveTheme,
@@ -199,7 +198,6 @@ export default function WritePage() {
             { step: 5, label: '5回目「なぜ？」', placeholder: '根本原因を明確にしてください（20〜40文字）' }
           ]
         });
-        setShowPrompts(true);
       } else if (type === 'sowhat') {
         setDynamicContent({
           title: 'So What?（つまり何？）',
@@ -213,7 +211,6 @@ export default function WritePage() {
             { step: 5, label: '5回目「つまり何？」', placeholder: '本質的な洞察をまとめてください（20〜40文字）' }
           ]
         });
-        setShowPrompts(true);
       } else if (type === '5w1h') {
         setDynamicContent({
           title: '5W1H 展開',
@@ -228,7 +225,6 @@ export default function WritePage() {
             { step: 6, label: 'How（どのように）', placeholder: 'どのように解決・対応しますか？（10〜20文字）' }
           ]
         });
-        setShowPrompts(true);
       } else if (type === 'prep') {
         setDynamicContent({
           title: 'PREP法',
@@ -241,15 +237,13 @@ export default function WritePage() {
             { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
           ]
         });
-        setShowPrompts(true);
       } else if (type === 'fogcatcher') {
-        setDynamicContent(prev => ({
+        setDynamicContent({
           title: 'Fog Catcher（思考の霧払い）',
           description: result.question || '以下から書き出したいテーマを選択してください。',
           prompts: result.prompts,
           question: result.question
-        }));
-        setShowPrompts(true);
+        });
       }
     } catch (error) {
       console.error('Failed to generate dynamic prompt:', error);
@@ -299,7 +293,6 @@ export default function WritePage() {
     if (dynamicPrompts[id]) {
       setIsCustomTheme(false);
       setCustomTheme('');
-      setShowPrompts(true);
       setDynamicContent(prev => prev ? { ...prev, question: undefined } : null);
       await generateDynamicPrompt(id);
     }
@@ -311,7 +304,6 @@ export default function WritePage() {
       question: prompt,
       description: prompt 
     } : null);
-    setShowPrompts(false);
   };
 
   const handleUseCustomTheme = () => {
@@ -429,12 +421,6 @@ export default function WritePage() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   // Combine content from step inputs
   useEffect(() => {
     if (stepInputs.length > 0) {
@@ -524,7 +510,14 @@ export default function WritePage() {
           </div>
           {dynamicContent?.imageUrl && (
             <div className="mt-6 rounded-2xl overflow-hidden border border-border">
-              <img src={dynamicContent.imageUrl} alt="Abduction Lens" className="w-full" />
+              <Image
+                src={dynamicContent.imageUrl}
+                alt="Abduction Lens"
+                width={1200}
+                height={800}
+                className="w-full h-auto"
+                unoptimized
+              />
             </div>
           )}
 

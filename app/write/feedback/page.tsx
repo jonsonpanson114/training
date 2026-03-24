@@ -11,7 +11,6 @@ import { ScoreRing } from '@/components/luxury/ScoreRing';
 import { CompletionEffect } from '@/components/luxury/CompletionEffect';
 import { calculateExpGain } from '@/lib/gamification';
 import { ThinkingBuddy } from '@/components/luxury/ThinkingBuddy';
-import { Info } from 'lucide-react';
 
 interface Entry {
   id: string;
@@ -24,7 +23,6 @@ interface Entry {
 }
 function FeedbackContent({ entryId }: { entryId: string | null }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [entry, setEntry] = useState<Entry | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -36,14 +34,15 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
   const [expGained, setExpGained] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showCompletion, setShowCompletion] = useState(false);
-  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     async function loadEntry() {
       if (entryId) {
         setIsLoading(true);
         try {
-          const response = await fetch(`/api/records?entryId=${entryId}`);
+          const userId = localStorage.getItem('verbalize_user_id');
+          if (!userId) throw new Error('User ID is missing');
+          const response = await fetch(`/api/records?entryId=${entryId}&userId=${userId}`);
           if (!response.ok) throw new Error('Failed to fetch entry');
           const data = await response.json();
           
@@ -81,7 +80,6 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
       setShowCompletion(true);
       const timer = setTimeout(() => {
         setShowCompletion(false);
-        setShowContent(true);
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -323,15 +321,15 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
 }
 
 export default function FeedbackPage() {
-  const [totalEntries, setTotalEntries] = useState(0);
-  const [streak, setStreak] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTotalEntries(parseInt(localStorage.getItem('verbalize_total') || '0', 10));
-    setStreak(parseInt(localStorage.getItem('verbalize_streak') || '0', 10));
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
+
+  const totalEntries = mounted ? parseInt(localStorage.getItem('verbalize_total') || '0', 10) : 0;
+  const streak = mounted ? parseInt(localStorage.getItem('verbalize_streak') || '0', 10) : 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">

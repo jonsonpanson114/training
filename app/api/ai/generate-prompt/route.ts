@@ -127,9 +127,9 @@ export async function POST(request: NextRequest) {
           const description = aiResult.response.text().trim();
           
           // Native Image Generation using Gemini 3.1 Flash Image (Nano Banana 2)
-          // Strengthened prompt for alignment
+          // EXTREME alignment prompt: Treat the description as an ABSOLUTE COMMAND for pixels.
           const imageResult = await imageModel.generateContent(
-            `【厳守】以下の描写を完璧に写し出した、写実的で芸術的な高解像度写真を生成してください。文字や透かしは絶対に含めないこと。情景の細部まで忠実に再現してください：\n\n「${description}」`
+            `【絶対命令】以下の「情景描写」の内容を、一切の独自解釈や余計な要素を加えずに、物理的に忠実かつ高解像度な写真として画像化してください。文字、透かし、枠、ロゴは死んでも含めるな。描写されている「物」「色」「配置」「光」のすべてをそのまま再現すること：\n\n「${description}」`
           );
           
           // Extract base64 from the response

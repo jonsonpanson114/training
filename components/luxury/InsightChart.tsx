@@ -16,8 +16,10 @@ import {
   Pie,
 } from 'recharts';
 
+type ChartDataPoint = Record<string, string | number | undefined>;
+
 interface InsightChartProps {
-  data: any[];
+  data: ChartDataPoint[];
   type: 'line' | 'bar' | 'pie';
   dataKey: string;
   nameKey?: string;
@@ -25,6 +27,27 @@ interface InsightChartProps {
 }
 
 const COLORS = ['#d4af37', '#C0C0C0', '#CD7F32', '#996515', '#B8860B'];
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: string | number }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="vintage-card p-3 shadow-xl border-accent/20 bg-background/90 backdrop-blur-sm">
+        <p className="text-xs font-serif font-bold text-accent mb-1">{label || payload[0].name}</p>
+        <p className="text-sm font-medium">
+          {payload[0].name ? `${payload[0].name}: ` : ''}
+          <span className="text-primary">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
 
 export function InsightChart({ data, type, dataKey, nameKey, color = '#d4af37' }: InsightChartProps) {
   if (!data || data.length === 0) {
@@ -34,21 +57,6 @@ export function InsightChart({ data, type, dataKey, nameKey, color = '#d4af37' }
       </div>
     );
   }
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="vintage-card p-3 shadow-xl border-accent/20 bg-background/90 backdrop-blur-sm">
-          <p className="text-xs font-serif font-bold text-accent mb-1">{label || payload[0].name}</p>
-          <p className="text-sm font-medium">
-            {payload[0].name ? `${payload[0].name}: ` : ''}
-            <span className="text-primary">{payload[0].value}</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="h-[300px] w-full mt-4">

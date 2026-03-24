@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, Sparkles, X, ChevronRight, User } from 'lucide-react';
+import { Sparkles, X, ChevronRight } from 'lucide-react';
 
 interface ThinkingBuddyProps {
   mode?: 'home' | 'feedback' | 'write';
@@ -10,33 +10,29 @@ interface ThinkingBuddyProps {
   content?: string;
 }
 
-export function ThinkingBuddy({ mode = 'home', userRank, feedbackScore, content }: ThinkingBuddyProps) {
+export function ThinkingBuddy({ mode = 'home', userRank, feedbackScore }: ThinkingBuddyProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [message, setMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
-    // Determine message based on mode and stats
-    let msg = '';
-    if (mode === 'home') {
-      msg = `よう、${userRank || '新入り'}。今日も適当に思考を散らかしに来たのか？ 言葉にできないモヤモヤ、俺が一緒にぶっ壊してやるよ。`;
-    } else if (mode === 'feedback') {
-      if (feedbackScore && feedbackScore >= 80) {
-        msg = `ほう、やるじゃないか。${feedbackScore}点か。お前の言葉には、少しずつ『魂』が宿り始めてる気がするぜ。悪くない。`;
-      } else if (feedbackScore && feedbackScore >= 60) {
-        msg = `${feedbackScore}点か。まあ、及第点だな。だがお前、まだ何か隠してるだろ？ もっと深いところまで潜ってみろよ。`;
-      } else {
-        msg = `${feedbackScore || 0}点だ。正直に言って、今のままじゃ話にならない。嘆く暇があったら、次のお題で俺を驚かせてみろ。`;
-      }
-    } else if (mode === 'write') {
-      msg = `焦んな。格好つけて複雑なことを言おうとするなよ。思考の源泉から溢れる言葉を、そのままぶちまければいいんだ。`;
-    }
-
-    setMessage(msg);
-    // Show after a short delay
     const timer = setTimeout(() => setIsVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, [mode, userRank, feedbackScore]);
+  }, []);
+
+  let message = '';
+  if (mode === 'home') {
+    message = `よう、${userRank || '新入り'}。今日も適当に思考を散らかしに来たのか？ 言葉にできないモヤモヤ、俺が一緒にぶっ壊してやるよ。`;
+  } else if (mode === 'feedback') {
+    if (feedbackScore && feedbackScore >= 80) {
+      message = `ほう、やるじゃないか。${feedbackScore}点か。お前の言葉には、少しずつ『魂』が宿り始めてる気がするぜ。悪くない。`;
+    } else if (feedbackScore && feedbackScore >= 60) {
+      message = `${feedbackScore}点か。まあ、及第点だな。だがお前、まだ何か隠してるだろ？ もっと深いところまで潜ってみろよ。`;
+    } else {
+      message = `${feedbackScore || 0}点だ。正直に言って、今のままじゃ話にならない。嘆く暇があったら、次のお題で俺を驚かせてみろ。`;
+    }
+  } else if (mode === 'write') {
+    message = `焦んな。格好つけて複雑なことを言おうとするなよ。思考の源泉から溢れる言葉を、そのままぶちまければいいんだ。`;
+  }
 
   if (!isVisible) return null;
 

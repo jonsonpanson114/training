@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, List, Search, Filter, Loader2, Sparkles, Brain, X, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, Search, Filter, Loader2, Sparkles, Brain, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,6 @@ const categoryNames: Record<string, string> = {
   'abduction-lens': 'Abduction Lens',
 };
 
-type ViewMode = 'list';
-
 export default function HistoryPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<Entry[]>([]);
@@ -85,14 +83,6 @@ export default function HistoryPage() {
   }, []);
 
   useEffect(() => {
-    if (userId) {
-      loadEntries();
-    } else if (mounted) {
-      setIsLoading(false);
-    }
-  }, [userId, mounted]);
-
-  useEffect(() => {
     let filtered = entries;
 
     if (searchTerm) {
@@ -112,7 +102,7 @@ export default function HistoryPage() {
     setFilteredEntries(filtered);
   }, [entries, searchTerm, selectedTag]);
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/records?userId=${userId}`);
@@ -143,7 +133,15 @@ export default function HistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      loadEntries();
+    } else if (mounted) {
+      setIsLoading(false);
+    }
+  }, [userId, mounted, loadEntries]);
 
   const handleAnalyze = async () => {
     if (!userId || isAnalyzing) return;

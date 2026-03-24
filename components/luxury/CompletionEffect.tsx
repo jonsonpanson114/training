@@ -6,38 +6,42 @@ interface CompletionEffectProps {
   onComplete?: () => void;
 }
 
+interface CelebrationParticle {
+  id: number;
+  rotation: number;
+  scale: number;
+  emoji: string;
+  distance: number;
+}
+
 export function CompletionEffect({ onComplete }: CompletionEffectProps) {
-  const [particles, setParticles] = useState<Array<{
-    id: number;
-    x: number;
-    y: number;
-    rotation: number;
-    scale: number;
-    emoji: string;
-  }>>([]);
+  const [particles, setParticles] = useState<CelebrationParticle[]>([]);
 
   useEffect(() => {
-    const emojis = ['✨', '🌟', '⭐', '💫', '🎉', '🏆', '📚', '🎨', '💡'];
-    const newParticles: any[] = [];
+    const particlesTimer = setTimeout(() => {
+      const emojis = ['✨', '🌟', '⭐', '💫', '🎉', '🏆', '📚', '🎨', '💡'];
+      const newParticles: CelebrationParticle[] = [];
 
-    for (let i = 0; i < 30; i++) {
-      newParticles.push({
-        id: i,
-        x: 50,
-        y: 50,
-        rotation: Math.random() * 360,
-        scale: Math.random() * 0.5 + 0.5,
-        emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      });
-    }
-
-    setParticles(newParticles);
+      for (let i = 0; i < 30; i += 1) {
+        newParticles.push({
+          id: i,
+          rotation: Math.random() * 360,
+          scale: Math.random() * 0.5 + 0.5,
+          emoji: emojis[Math.floor(Math.random() * emojis.length)],
+          distance: 150 + Math.random() * 100,
+        });
+      }
+      setParticles(newParticles);
+    }, 0);
 
     const timer = setTimeout(() => {
       if (onComplete) onComplete();
     }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(particlesTimer);
+      clearTimeout(timer);
+    };
   }, [onComplete]);
 
   return (
@@ -60,15 +64,14 @@ export function CompletionEffect({ onComplete }: CompletionEffectProps) {
       {/* Floating particles */}
       {particles.map((particle) => {
         const angle = (particle.id / 30) * 2 * Math.PI;
-        const distance = 150 + Math.random() * 100;
 
         return (
           <div
             key={particle.id}
             className="absolute text-4xl"
             style={{
-              left: `calc(50% + ${Math.cos(angle) * distance}px)`,
-              top: `calc(50% + ${Math.sin(angle) * distance}px)`,
+              left: `calc(50% + ${Math.cos(angle) * particle.distance}px)`,
+              top: `calc(50% + ${Math.sin(angle) * particle.distance}px)`,
               animation: `celebrate 2s ease-out forwards`,
               animationDelay: `${particle.id * 50}ms`,
               transform: `rotate(${particle.rotation}deg) scale(${particle.scale})`,

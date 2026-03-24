@@ -1,10 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
-
-interface TooltipProps {
-  children: React.ReactNode;
-}
+import React from 'react';
 
 export const TooltipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
@@ -14,7 +10,7 @@ export const Tooltip: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <div className="relative inline-block">{children}</div>;
 };
 
-export const TooltipTrigger: React.FC<{ children: React.ReactNode; asChild?: boolean }> = ({ children, asChild }) => {
+export const TooltipTrigger: React.FC<{ children: React.ReactNode; asChild?: boolean }> = ({ children }) => {
   return <>{children}</>;
 };
 
