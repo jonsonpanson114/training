@@ -405,6 +405,101 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case 'analogy': {
+        const prompt = `アナロジートレーニング（異分野の知見を応用する思考法）のための、「テーマ（ユーザーの悩み）」と「ビッグテーマ（無関係な分野）」のペアを3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["テーマ1|ビッグテーマ1", "テーマ2|ビッグテーマ2", "テーマ3|ビッグテーマ3"]
+}
+
+条件：
+- テーマ：日常の悩みや課題（仕事、人間関係、自己改善など）
+- ビッグテーマ：全く関係ない分野（スポーツ、自然、料理、音楽、歴史、宇宙など）
+- 两者の間に直接的な関連性がないこと
+- 組み合わせの面白さ、意外性があること
+- 各ペアは「テーマ｜ビッグテーマ」の形式で、簡潔に（50文字以内）`;
+
+        let prompts = [
+          'チームの生産性が上がらない|マラソンレース',
+          '新しいアイデアが出ない|園芸',
+          'プレゼンの説得力を上げたい|料理のレシピ'
+        ];
+
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
+            }
+          }
+        } catch (error) {
+          console.error('AI generation error for analogy:', error);
+        }
+
+        result = {
+          question: '',
+          prompts,
+          steps: [
+            { step: 1, label: 'ステップ1：テーマとビッグテーマの選択', placeholder: '選んだ「テーマ（悩み）」と「ビッグテーマ」を確認し、なぜその組み合わせを選んだか書いてください（20〜40文字）' },
+            { step: 2, label: 'ステップ2：マインドマップ（類似点探し）', placeholder: '「テーマ」と「ビッグテーマ」の両方から構成要素を箇条書きで挙げ、構造が似ている部分や共通する法則を見つけてください（100〜150文字）' },
+            { step: 3, label: 'ステップ3：解決策の導出', placeholder: 'ビッグテーマでの成功法則や仕組みを、元のテーマに当てはめるとどうなるか？明日から実行できる具体的なアクションプランを考えてください（100〜150文字）' }
+          ]
+        };
+        break;
+      }
+
+      case 'metaphor-coach': {
+        const prompt = `メタファーコーチ（比喩表現を作る力を鍛えるトレーニング）のための、「比喩化したい対象」を3つ提案してください。
+
+出力は以下のJSON形式のみにしてください：
+{
+  "prompts": ["対象1", "対象2", "対象3"]
+}
+
+条件：
+- 抽象的な概念や感情であること（「愛」「不安」「成功」「孤独」「信頼」「成長」など）
+- 日常的に経験するが、言葉にしにくいものであること
+- 比喩で表現しがいがあるもの
+- 各対象は簡潔に（20文字以内）`;
+
+        let prompts = [
+          '心の奥底に溜まっているモヤモヤ',
+          '人を信じることの難しさ',
+          '新しいことを始める時のワクワク'
+        ];
+
+        try {
+          const aiResult = await textModel.generateContent(prompt);
+          const text = aiResult.response.text().trim();
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            if (data.prompts && Array.isArray(data.prompts)) {
+              prompts = data.prompts.slice(0, 3);
+            }
+          }
+        } catch (error) {
+          console.error('AI generation error for metaphor-coach:', error);
+        }
+
+        result = {
+          question: '',
+          prompts,
+          steps: [
+            { step: 1, label: 'ステップ1：特徴の書き出し（解剖）', placeholder: '比喩化したい対象の特徴、性質、要素を細かく書き出してください（50〜80文字）' },
+            { step: 2, label: 'ステップ2：自由連想（飛躍）', placeholder: 'その特徴から連想する言葉、イメージ、風景を自由に挙げてください。ありきたりな表現は避けて、思い切って飛躍させてください（80〜120文字）' },
+            { step: 3, label: 'ステップ3：トーン設定（雰囲気の読解）', placeholder: 'この比喩全体の雰囲気を決めてください（例：儚い、力強い、神秘的、温かい、冷笑的など）（20〜40文字）' },
+            { step: 4, label: 'ステップ4：比較文の作成（接合）', placeholder: 'これまでの材料を使い、独自の比喩表現を創ってください。「AはBのようなものだ」の形式だけでなく、比喩を文脈に組み込んでください（80〜150文字）' },
+            { step: 5, label: 'ステップ5：比喩の変換と応用（洗練）', placeholder: '比喩を磨き上げ、誰かに伝えるように最終的な文章にしてください。比喩から何が見えるか、どのような洞察が得られるかも含めてください（100〜200文字）' }
+          ]
+        };
+        break;
+      }
+
       default:
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }

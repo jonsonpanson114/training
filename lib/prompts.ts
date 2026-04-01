@@ -325,6 +325,16 @@ export const dynamicPrompts: Record<string, { title: string; description: string
     title: 'Abduction Lens',
     description: '「決定的瞬間」のシーンに対し、[観察事実]・[仮説]・[根拠]を記述',
     timeLimit: 7
+  },
+  analogy: {
+    title: 'Analogy Training（アナロジートレーニング）',
+    description: '異なる領域のパターンを借りて、問題解決のヒントを見つける',
+    timeLimit: 7
+  },
+  'metaphor-coach': {
+    title: 'Metaphor Coach（メタファーコーチ）',
+    description: '5ステップで比喩表現を作る力を鍛える',
+    timeLimit: 10
   }
 };
 

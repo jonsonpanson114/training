@@ -1,5 +1,5 @@
 // Prompt types
-export type PromptCategory = 'basic' | 'emotion' | 'work' | 'abduction' | 'synapse' | 'metaphor' | 'fogcatcher' | 'whysos' | 'sowhat' | '5w1h' | 'prep' | 'abduction-lens';
+export type PromptCategory = 'basic' | 'emotion' | 'work' | 'abduction' | 'synapse' | 'metaphor' | 'metaphor-coach' | 'analogy' | 'fogcatcher' | 'whysos' | 'sowhat' | '5w1h' | 'prep' | 'abduction-lens';
 export type PromptType = 'fixed' | 'dynamic';
 
 export interface Prompt {
@@ -88,4 +88,26 @@ export interface StreakData {
   longestStreak: number;
   totalEntries: number;
   lastEntryDate?: Date;
+}
+
+// Analogy Training specific
+export interface AnalogyEntry extends Entry {
+  theme: string;
+  bigTheme: string;
+  mindMap?: {
+    themeElements: string[];
+    bigThemeElements: string[];
+    connections: string[];
+  };
+  solutions: string[];
+}
+
+// Metaphor Coach specific
+export interface MetaphorCoachEntry extends Entry {
+  target: string;
+  features: string[];
+  associations: string[];
+  tone: string;
+  comparison: string;
+  refinement: string;
 }

@@ -180,6 +180,25 @@ export default function HomePage() {
       hover: 'hover:bg-cyan-50 hover:border-cyan-300 hover:shadow-lg hover:-translate-y-0.5',
       badge: '伝え方'
     },
+    // Creative Thinking Training
+    {
+      id: 'analogy',
+      title: 'Analogy Training',
+      icon: Infinity,
+      color: 'bg-amber-100 text-amber-700',
+      hover: 'hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '3ステップ',
+      highlighted: true
+    },
+    {
+      id: 'metaphor-coach',
+      title: 'Metaphor Coach',
+      icon: Sparkles,
+      color: 'bg-fuchsia-100 text-fuchsia-700',
+      hover: 'hover:bg-fuchsia-50 hover:border-fuchsia-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '5ステップ',
+      highlighted: true
+    },
     // Other Categories
     {
       id: 'emotion',
@@ -528,6 +547,18 @@ export default function HomePage() {
               <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
                 <Sparkles className="w-4 h-4 mr-2 text-accent" />
                 Metaphor Maker
+              </Button>
+            </Link>
+            <Link href="/write/analogy">
+              <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                Analogy Training
+              </Button>
+            </Link>
+            <Link href="/write/metaphor-coach">
+              <Button variant="outline" className="w-full justify-start text-sm group border-accent/50 bg-accent/5">
+                <Sparkles className="w-4 h-4 mr-2 text-accent" />
+                Metaphor Coach
               </Button>
             </Link>
             {/* Other */}
