@@ -131,12 +131,20 @@ export default function HomePage() {
       highlighted: true
     },
     {
-      id: 'abduction-lens',
-      title: 'Abduction Lens (アブダクション道場)',
+      id: 'abduction',
+      title: 'アブダクション道場',
       icon: Search,
       color: 'bg-indigo-100 text-indigo-700',
       hover: 'hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5',
-      badge: '★ 本日の推薦',
+      badge: '3つの仮説 / 未知への考察',
+    },
+    {
+      id: 'abduction-lens',
+      title: 'Abduction Lens',
+      icon: Search,
+      color: 'bg-indigo-100 text-indigo-700',
+      hover: 'hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5',
+      badge: '観察・仮説・根拠 / 視覚の深掘り',
       highlighted: true
     },
     // Thinking Training

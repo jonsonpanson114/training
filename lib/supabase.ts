@@ -64,6 +64,8 @@ export type Database = {
           category: string;
           content: string;
           tags: string[];
+          image_url: string | null;
+          context_text: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -75,6 +77,8 @@ export type Database = {
           category: string;
           content: string;
           tags?: string[];
+          image_url?: string | null;
+          context_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -86,6 +90,8 @@ export type Database = {
           category?: string;
           content?: string;
           tags?: string[];
+          image_url?: string | null;
+          context_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };

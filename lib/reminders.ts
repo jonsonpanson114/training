@@ -181,7 +181,7 @@ export async function subscribePush(userId: string, settings: ReminderSettings):
     existing ||
     (await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+      applicationServerKey: urlBase64ToUint8Array(keyData.publicKey) as BufferSource,
     }));
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo';

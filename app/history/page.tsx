@@ -15,6 +15,8 @@ interface Entry {
   category: string;
   content: string;
   tags: string[];
+  imageUrl?: string;
+  contextText?: string;
   createdAt: string;
 }
 
@@ -25,6 +27,8 @@ interface ApiEntry {
   category: string | null;
   content: string;
   tags: string[] | null;
+  image_url?: string | null;
+  context_text?: string | null;
   created_at: string;
 }
 
@@ -116,6 +120,8 @@ export default function HistoryPage() {
         category: item.category || 'general',
         content: item.content,
         tags: item.tags || [],
+        imageUrl: item.image_url || undefined,
+        contextText: item.context_text || undefined,
         createdAt: item.created_at,
       }));
       
@@ -347,6 +353,18 @@ export default function HistoryPage() {
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                   {entry.content}
                 </p>
+                {entry.imageUrl && (
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3 border border-border shadow-inner group">
+                    <img
+                      src={entry.imageUrl}
+                      alt={entry.promptTitle}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <p className="text-white text-xs font-serif italic truncate">{entry.contextText}</p>
+                    </div>
+                  </div>
+                )}
                 {entry.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {entry.tags.map(tag => (

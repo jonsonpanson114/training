@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
       promptTitle, 
       category, 
       content, 
-      tags 
+      tags,
+      imageUrl,
+      contextText
     } = body;
 
     if (!userId || !content) {
@@ -72,6 +74,8 @@ export async function POST(request: NextRequest) {
         category: category || 'general',
         content: content,
         tags: tags || [],
+        image_url: imageUrl || null,
+        context_text: contextText || null,
       })
       .select()
       .single();

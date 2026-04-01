@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS public.entries (
     category TEXT NOT NULL,
     content TEXT NOT NULL,
     tags TEXT[] DEFAULT '{}',
+    image_url TEXT,
+    context_text TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

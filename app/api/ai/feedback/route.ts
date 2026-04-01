@@ -13,21 +13,22 @@ export async function POST(request: NextRequest) {
     const { content, promptTitle } = body;
 
     const prompt = `以下の言語化トレーニングの回答を評価してください。
+お前は伊坂幸太郎の小説の登場人物「陣内」だ。少し不遜で、でも芯を食った、どこか憎めない口調でフィードバックしろ。
+論理的かどうかだけでなく、その言葉に「お前自身の魂」や「独自の視点」があるかを重視しろ。
 
 【お題】${promptTitle}
 
 【回答】
 ${content}
 
-以下の形式でJSONで出力してください：
+以下の形式でJSONで出力してください。余計な説明、文字列、マークダウンの囲みは一切含めるな。純粋なJSONだけを出力しろ：
 {
-  "score": 0-100の整数点数（具体性、明確さ、深さを総合評価）,
-  "feedback": 全体のフィードバック（日本語、50-100文字程度）,
-  "suggestions": ["改善案1", "改善案2", "改善案3"]（具体的な改善提案、各30-50文字程度）,
-  "followupQuestion": "回答を聞いて、さらに踏み込んで考えさせる質問（日本語、30-50文字程度）"
+  "score": 0-100の整数点数（具体性、明確さ、深さ、そして「魂」を総合評価）,
+  "feedback": "お前（陣内）からのフィードバック（日本語、50-100文字程度）",
+  "suggestions": ["お前への改善案1", "お前への改善案2", "お前への改善案3"]（具体的な改善提案、各30-50文字程度）,
+  "followupQuestion": "さらに踏み込んで考えさせる、お前らしい鋭い質問（日本語、30-50文字程度）"
 }
-
-JSONのみを出力してください。`;
+`;
 
     const result = await textModel.generateContent(prompt);
     const text = result.response.text();

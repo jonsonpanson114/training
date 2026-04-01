@@ -106,6 +106,8 @@ export function decideDailyBadge(input: {
   content: string;
   tags: string[];
   isHardMode: boolean;
+  imageUrl?: string | null;
+  contextText?: string | null;
 }): DailyBadge {
   if (input.isHardMode) return BADGES[4];
   if (calcSpecificityScore(input.content) >= 6) return BADGES[5];

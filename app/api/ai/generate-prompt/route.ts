@@ -47,7 +47,14 @@ export async function POST(request: NextRequest) {
 
         try {
           const aiResult = await textModel.generateContent(prompt);
-          result = { phenomenon: aiResult.response.text().trim() };
+          result = { 
+            phenomenon: aiResult.response.text().trim(),
+            steps: [
+              { step: 1, label: '仮説 A（論理的）', placeholder: '最も可能性が高い説明を考えてください（30〜60文字）' },
+              { step: 2, label: '仮説 B（意外性）', placeholder: '少し別の視点から、驚きのある仮説を立ててください（30〜60文字）' },
+              { step: 3, label: '仮説 C（深淵/不気味）', placeholder: '最も不条理、あるいは不気味な裏側を推測してください（30〜60文字）' }
+            ]
+          };
         } catch (error) {
           console.error('AI generation error for abduction:', error);
           result = {
@@ -137,7 +144,12 @@ export async function POST(request: NextRequest) {
           if (imagePart?.inlineData) {
             result = { 
               description,
-              imageUrl: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`
+              imageUrl: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`,
+              steps: [
+                { step: 1, label: '❶ 観察事実', placeholder: '画像の中に見える「色」「物」「配置」を客観的に記述せよ' },
+                { step: 2, label: '❷ 飛躍的仮説', placeholder: 'このシーンの裏で何が起こっているのか、大胆に推測せよ' },
+                { step: 3, label: '❸ 推論の根拠', placeholder: 'その仮説を支える「描写からの証拠」を説明せよ' }
+              ]
             };
           } else {
             // Fallback (just in case model doesn't return image)

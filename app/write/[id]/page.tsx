@@ -50,16 +50,6 @@ export default function WritePage() {
   const [isHardMode, setIsHardMode] = useState(false);
   const [bannedWords, setBannedWords] = useState<string[]>([]);
   const [hardModeError, setHardModeError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let savedId = localStorage.getItem('verbalize_user_id');
-    if (!savedId || savedId.startsWith('user_')) {
-      // Create a valid UUID-like string if not present
-      savedId = crypto.randomUUID?.() || '00000000-0000-0000-0000-000000000000';
-      localStorage.setItem('verbalize_user_id', savedId);
-    }
-    setUserId(savedId);
-  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [trainingMode, setTrainingMode] = useState<'standard' | 'quick' | 'deep' | 'reflect'>('standard');
@@ -67,6 +57,15 @@ export default function WritePage() {
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
+
+  useEffect(() => {
+    let savedId = localStorage.getItem('verbalize_user_id');
+    if (!savedId || savedId.startsWith('user_')) {
+      savedId = crypto.randomUUID?.() || '00000000-0000-0000-0000-000000000000';
+      localStorage.setItem('verbalize_user_id', savedId);
+    }
+    setUserId(savedId);
+  }, []);
 
   const getModeAdjustedTime = (baseSeconds: number, mode: 'standard' | 'quick' | 'deep' | 'reflect') => {
     if (mode === 'quick') return 180;
@@ -283,61 +282,6 @@ export default function WritePage() {
     }
   };
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter(t => t !== tag));
-  };
-
-  const handleStepInput = (stepIndex: number, value: string) => {
-    const updated = [...stepInputs];
-    updated[stepIndex].answer = value;
-    setStepInputs(updated);
-  };
-
-  const handleNextStep = () => {
-    if (currentStep < stepInputs.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handleRegeneratePrompt = async () => {
-    // Reset and generate new prompt
-    if (dynamicPrompts[id]) {
-      setIsCustomTheme(false);
-      setCustomTheme('');
-      setDynamicContent(prev => prev ? { ...prev, question: undefined } : null);
-      await generateDynamicPrompt(id);
-    }
-  };
-
-  const handleSelectChallenge = (prompt: string) => {
-    setDynamicContent(prev => prev ? { 
-      ...prev, 
-      question: prompt,
-      description: prompt 
-    } : null);
-  };
-
-  const handleUseCustomTheme = () => {
-    if (customTheme.trim()) {
-      setDynamicContent(prev => prev ? { ...prev, question: customTheme } : null);
-      setIsCustomTheme(true);
-      setShowThemeInput(false);
-      // Steps will be reinitialized by useEffect when question changes
-    }
-  };
-
-  const handleResetToAIGenerated = () => {
-    setIsCustomTheme(false);
-    handleRegeneratePrompt();
-  };
-
   const handleSubmit = async () => {
     if (!content.trim()) return;
 
@@ -367,6 +311,8 @@ export default function WritePage() {
           category: prompt?.category || id,
           content,
           tags,
+          imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null,
+          contextText: dynamicContent?.description || (prompt as any)?.description || null,
         }),
       });
 
@@ -377,7 +323,6 @@ export default function WritePage() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('API save failed:', errorData);
-        // Alert the user with more detail if available
         const errorMsg = errorData.error || response.statusText;
         alert(`サーバーへの保存に失敗しました: ${errorMsg}\nローカル保存で続行します。`);
       }
@@ -386,12 +331,10 @@ export default function WritePage() {
     }
 
     try {
-      // Calculate and save EXP
       const expGain = calculateExpGain(content);
       const currentExp = parseInt(localStorage.getItem('verbalize_exp') || '0', 10);
       localStorage.setItem('verbalize_exp', (currentExp + expGain).toString());
 
-      // Maintain localStorage for entries
       const entries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
       const newEntryObject = {
         id: finalEntryId,
@@ -400,6 +343,8 @@ export default function WritePage() {
         category: prompt?.category || id,
         content,
         tags,
+        imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null,
+        contextText: dynamicContent?.description || (prompt as any)?.description || null,
         createdAt: createdAt,
         isOffline: finalEntryId.startsWith('local_')
       };
@@ -407,7 +352,6 @@ export default function WritePage() {
       entries.push(newEntryObject);
       localStorage.setItem('verbalize_entries', JSON.stringify(entries));
 
-      // Update streak and total
       const lastEntry = entries[entries.length - 2];
       const lastDate = lastEntry ? new Date(lastEntry.createdAt) : null;
       const today = new Date();
@@ -431,7 +375,7 @@ export default function WritePage() {
         streak = 1;
       }
 
-      const badge = decideDailyBadge({ content, tags, isHardMode });
+      const badge = decideDailyBadge({ content, tags, imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null, contextText: dynamicContent?.description || (prompt as any)?.description || null, isHardMode });
       localStorage.setItem(`verbalize_badge_${getTodayKey(today)}`, JSON.stringify(badge));
       if (isDailyMode) {
         localStorage.setItem(`verbalize_daily_completed_${getTodayKey(today)}`, '1');
@@ -449,7 +393,59 @@ export default function WritePage() {
     }
   };
 
-  // Combine content from step inputs
+  const handleRegeneratePrompt = async () => {
+    if (dynamicPrompts[id]) {
+      setIsCustomTheme(false);
+      setCustomTheme('');
+      setDynamicContent(prev => prev ? { ...prev, question: undefined } : null);
+      await generateDynamicPrompt(id);
+    }
+  };
+
+  const handleSelectChallenge = (prompt: string) => {
+    setDynamicContent(prev => prev ? { 
+      ...prev, 
+      question: prompt,
+      description: prompt 
+    } : null);
+  };
+
+  const handleUseCustomTheme = () => {
+    if (customTheme.trim()) {
+      setDynamicContent(prev => prev ? { ...prev, question: customTheme } : null);
+      setIsCustomTheme(true);
+      setShowThemeInput(false);
+    }
+  };
+
+  const handleResetToAIGenerated = () => {
+    setIsCustomTheme(false);
+    handleRegeneratePrompt();
+  };
+
+  const handleStepInput = (stepIndex: number, value: string) => {
+    const updated = [...stepInputs];
+    updated[stepIndex].answer = value;
+    setStepInputs(updated);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < stepInputs.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setTags(tags.filter(t => t !== tag));
+  };
+
   useEffect(() => {
     if (stepInputs.length > 0) {
       const combined = stepInputs.map(si => si.answer).join('\n\n');
@@ -490,9 +486,7 @@ export default function WritePage() {
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       <FloatingParticles />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 lg:p-8 overflow-auto z-10">
-        {/* Header */}
         <header className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/">
@@ -509,7 +503,6 @@ export default function WritePage() {
               <Button variant={trainingMode === 'deep' ? 'default' : 'outline'} size="sm" onClick={() => setTrainingMode('deep')}>深掘り</Button>
               <Button variant={trainingMode === 'reflect' ? 'default' : 'outline'} size="sm" onClick={() => setTrainingMode('reflect')}>感情整理</Button>
             </div>
-            {/* Hard Mode Toggle */}
             <div className="ml-auto">
               <Button
                 variant={isHardMode ? "default" : "outline"}
@@ -523,7 +516,6 @@ export default function WritePage() {
           </div>
         </header>
 
-        {/* Timer */}
         <LuxuryTimer
           timeLeft={timeLeft}
           totalTime={totalTime}
@@ -532,7 +524,6 @@ export default function WritePage() {
           onReset={handleReset}
         />
 
-        {/* Prompt Card */}
         <div className="vintage-card p-6 lg:p-8 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-start gap-4 mb-6">
             <div className="vintage-icon-container accent shrink-0">
@@ -556,8 +547,6 @@ export default function WritePage() {
             </div>
           )}
 
-          {/* Challenge Selector for training types with challenges */}
-          {/* Prompt Selector Grid */}
           {dynamicContent?.prompts && dynamicContent.prompts.length > 0 && (
             <div className="mt-6">
               <p className="text-sm font-medium text-muted-foreground mb-4 flex items-center gap-2">
@@ -592,7 +581,6 @@ export default function WritePage() {
                     <p className={`text-sm leading-relaxed font-medium ${dynamicContent.question === p ? 'text-foreground' : 'text-foreground/80'}`}>
                       {p}
                     </p>
-                    
                     {dynamicContent.question === p && (
                       <div className="absolute -bottom-2 -right-2 bg-accent text-background text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
                         SELECTED
@@ -604,7 +592,6 @@ export default function WritePage() {
             </div>
           )}
 
-          {/* Theme Controls for Dynamic Prompts */}
           {dynamicPrompts[id] && (
             <div className="mt-6 pt-6 border-t border-border">
               <div className="flex flex-wrap gap-3">
@@ -617,7 +604,6 @@ export default function WritePage() {
                   <RefreshCw className="w-4 h-4" />
                   新しいお題を生成
                 </Button>
-                {/* Custom theme buttons only for specific training types */}
                 {['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
                   <>
                     <Button
@@ -643,7 +629,6 @@ export default function WritePage() {
                 )}
               </div>
 
-              {/* Custom Theme Input - only for specific training types */}
               {showThemeInput && ['whysos', 'sowhat', '5w1h', 'prep', 'fogcatcher'].includes(id) && (
                 <div className="mt-4 p-4 bg-input rounded-xl border border-border">
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -664,73 +649,45 @@ export default function WritePage() {
                       適用
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ※ 自分のテーマを設定すると、そのテーマについてトレーニングを行います
-                  </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step-by-step inputs for specific training types */}
           {dynamicContent?.steps && dynamicContent.steps.length > 0 && (
             <div className="mt-8 pt-8 border-t border-border">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <List className="w-5 h-5 text-primary" />
-                  <h3 className="font-serif font-semibold text-foreground">
-                    ステップ別トレーニング
-                  </h3>
+                  <h3 className="font-serif font-semibold text-foreground">ステップ別トレーニング</h3>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {currentStep + 1} / {stepInputs.length}
-                </div>
+                <div className="text-sm text-muted-foreground">{currentStep + 1} / {stepInputs.length}</div>
               </div>
-
               <div className="space-y-6">
                 {dynamicContent.steps.map((step, index) => (
                   <div
                     key={step.step}
-                    className={`
-                      p-4 rounded-xl border transition-all duration-300
-                      ${index === currentStep
-                        ? 'border-accent bg-accent/5 shadow-md'
-                        : 'border-border bg-input opacity-60'}
-                    `}
+                    className={`p-4 rounded-xl border transition-all duration-300 ${index === currentStep ? 'border-accent bg-accent/5 shadow-md' : 'border-border bg-input opacity-60'}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`vintage-icon-container shrink-0 ${index === currentStep ? 'primary' : ''}`}>
                         <span className="text-sm font-bold">{index + 1}</span>
                       </div>
                       <div className="flex-1">
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          {step.label}
-                        </label>
+                        <label className="block text-sm font-medium text-foreground mb-2">{step.label}</label>
                         <textarea
                           value={stepInputs[index]?.answer || ''}
                           onChange={(e) => handleStepInput(index, e.target.value)}
                           placeholder={step.placeholder}
                           rows={3}
                           disabled={index > currentStep}
-                          className={`
-                            w-full px-4 py-3 rounded-xl border text-base leading-relaxed resize-none
-                            ${index === currentStep
-                              ? 'border-accent bg-card focus:border-accent'
-                              : 'border-border bg-input'
-                            }
-                            disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-accent/30
-                          `}
+                          className={`w-full px-4 py-3 rounded-xl border text-base leading-relaxed resize-none ${index === currentStep ? 'border-accent bg-card focus:border-accent' : 'border-border bg-input'} disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-accent/30`}
                         />
                       </div>
                     </div>
-
                     {index === currentStep && stepInputs[index]?.answer && (
                       <div className="flex justify-end mt-3">
-                        <Button
-                          onClick={handleNextStep}
-                          disabled={!stepInputs[index]?.answer}
-                          className="vintage-button-primary flex items-center gap-2"
-                        >
+                        <Button onClick={handleNextStep} disabled={!stepInputs[index]?.answer} className="vintage-button-primary flex items-center gap-2">
                           次へ進む
                           <ChevronRight className="w-4 h-4" />
                         </Button>
@@ -739,24 +696,10 @@ export default function WritePage() {
                   </div>
                 ))}
               </div>
-
-              {currentStep === stepInputs.length - 1 && stepInputs[stepInputs.length - 1]?.answer && (
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    リセットしてやり直す
-                  </Button>
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Hard Mode Info */}
         {isHardMode && (
           <div className="vintage-card p-4 border-danger/30 bg-danger/5 mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-start gap-4">
@@ -771,15 +714,12 @@ export default function WritePage() {
                     <span key={word} className="text-xs bg-danger/10 text-danger px-2 py-1 rounded border border-danger/20 font-bold">🚫 NG: {word}</span>
                   ))}
                 </div>
-                {hardModeError && (
-                  <p className="text-xs text-danger mt-3 font-bold animate-pulse">{hardModeError}</p>
-                )}
+                {hardModeError && <p className="text-xs text-danger mt-3 font-bold animate-pulse">{hardModeError}</p>}
               </div>
             </div>
           </div>
         )}
 
-        {/* Input Area (for regular prompts or fogcatcher) */}
         {!dynamicContent?.steps && (
           <LuxuryInputArea
             value={content}
@@ -788,7 +728,6 @@ export default function WritePage() {
           />
         )}
 
-        {/* Tags */}
         <div className="vintage-card p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-4 h-4 text-muted-foreground" />
@@ -818,7 +757,6 @@ export default function WritePage() {
           </div>
         </div>
 
-        {/* Submit Button */}
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting || !content.trim()}
@@ -828,7 +766,7 @@ export default function WritePage() {
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              送信中...
+               送信中...
             </>
           ) : (
             <>
@@ -839,55 +777,26 @@ export default function WritePage() {
         </Button>
       </div>
 
-      {/* Sidebar */}
       <aside className="w-full lg:w-72 p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-border bg-card/50 z-10">
         <div className="vintage-card p-6 mb-6">
           <h3 className="font-serif font-semibold mb-4 text-foreground">コツ</h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary">1.</span>
-              <span>抽象的な概念を具体的な言葉に変える</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">2.</span>
-              <span>自分の経験やエピソードを交える</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">3.</span>
-              <span>数字や事例を交えると伝わりやすくなります</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">4.</span>
-              <span>簡潔に、でも十分に伝える</span>
-            </li>
+            <li className="flex items-start gap-2"><span className="text-primary">1.</span><span>抽象的な概念を具体的な言葉に変える</span></li>
+            <li className="flex items-start gap-2"><span className="text-primary">2.</span><span>自分の経験やエピソードを交える</span></li>
+            <li className="flex items-start gap-2"><span className="text-primary">3.</span><span>数字や事例を交えると伝わりやすくなります</span></li>
+            <li className="flex items-start gap-2"><span className="text-primary">4.</span><span>簡潔に、でも十分に伝える</span></li>
           </ul>
         </div>
-
         <div className="vintage-card p-6">
           <h3 className="font-serif font-semibold mb-4 text-foreground">現在の状況</h3>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">文字数</span>
-              <span className="font-semibold">{content.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">タグ</span>
-              <span className="font-semibold">{tags.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">ステップ</span>
-              <span className={`font-semibold ${dynamicContent?.steps ? 'text-primary' : 'text-muted-foreground'}`}>
-                {dynamicContent?.steps ? `${currentStep + 1} / ${stepInputs.length}` : '-'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">モード</span>
-              <span className="font-semibold capitalize">{trainingMode}</span>
-            </div>
+            <div className="flex justify-between"><span className="text-muted-foreground">文字数</span><span className="font-semibold">{content.length}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">タグ</span><span className="font-semibold">{tags.length}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">ステップ</span><span className={`font-semibold ${dynamicContent?.steps ? 'text-primary' : 'text-muted-foreground'}`}>{dynamicContent?.steps ? `${currentStep + 1} / ${stepInputs.length}` : '-'}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">モード</span><span className="font-semibold capitalize">{trainingMode}</span></div>
           </div>
         </div>
       </aside>
-
       <ThinkingBuddy mode="write" />
     </div>
   );
