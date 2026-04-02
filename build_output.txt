@@ -1,0 +1,44 @@
+
+> verbalize@0.1.0 build
+> next build
+
+笆ｲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env.production
+
+  Creating an optimized production build ...
+笨・Compiled successfully in 13.4s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/21) ...
+  Generating static pages using 15 workers (5/21) 
+  Generating static pages using 15 workers (10/21) 
+  Generating static pages using 15 workers (15/21) 
+笨・Generating static pages using 15 workers (21/21) in 1084.4ms
+  Finalizing page optimization ...
+
+Route (app)
+笏・笳・/
+笏・笳・/_not-found
+笏・ﾆ・/api/ai/feedback
+笏・ﾆ・/api/ai/generate-prompt
+笏・ﾆ・/api/ai/insights
+笏・ﾆ・/api/cron/push-reminders
+笏・ﾆ・/api/push/public-key
+笏・ﾆ・/api/push/send-test
+笏・ﾆ・/api/push/subscribe
+笏・ﾆ・/api/push/unsubscribe
+笏・ﾆ・/api/records
+笏・ﾆ・/api/records/summary
+笏・笳・/apple-icon.png
+笏・笳・/history
+笏・笳・/icon.png
+笏・笳・/manifest.webmanifest
+笏・笳・/profile
+笏・笳・/tips
+笏・ﾆ・/write/[id]
+笏・笳・/write/feedback
+
+
+笳・ (Static)   prerendered as static content
+ﾆ・ (Dynamic)  server-rendered on demand
+

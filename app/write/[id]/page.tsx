@@ -57,6 +57,8 @@ export default function WritePage() {
   const [isCustomTheme, setIsCustomTheme] = useState(false);
   const [customTheme, setCustomTheme] = useState('');
   const [showThemeInput, setShowThemeInput] = useState(false);
+  const [stepFeedbacks, setStepFeedbacks] = useState<string[]>([]);
+  const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
 
   useEffect(() => {
     let savedId = localStorage.getItem('verbalize_user_id');
@@ -254,6 +256,21 @@ export default function WritePage() {
             { step: 4, label: 'Point（結論）', placeholder: '主張を再確認してください（20〜40文字）' }
           ]
         });
+      } else if (type === 'analogy') {
+        const [challenge, bigTheme] = (result.prompts?.[0] || 'チームの生産性|マラソン').split('|');
+        setDynamicContent({
+          title: 'アナロジートレーニング',
+          description: `【課題】：${challenge} \n 【大テーマ】：${bigTheme}`,
+          prompts: result.prompts,
+          steps: result.steps
+        });
+      } else if (type === 'metaphor-coach') {
+        setDynamicContent({
+          title: 'メタファーコーチ',
+          description: result.prompts?.[0] || '愛',
+          prompts: result.prompts,
+          steps: result.steps
+        });
       } else if (type === 'fogcatcher') {
         setDynamicContent({
           title: 'Fog Catcher（思考の霧払い）',
@@ -429,8 +446,34 @@ export default function WritePage() {
     setStepInputs(updated);
   };
 
-  const handleNextStep = () => {
-    if (currentStep < stepInputs.length - 1) {
+  const handleNextStep = async () => {
+    if (currentStep < (dynamicContent?.steps?.length || 0) - 1) {
+      if (id === 'analogy' || id === 'metaphor-coach') {
+        setIsFeedbackLoading(true);
+        try {
+          const response = await fetch('/api/ai/step-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: id,
+              currentStep: currentStep + 1,
+              content: stepInputs[currentStep].answer,
+              previousSteps: stepInputs.slice(0, currentStep),
+              theme: dynamicContent?.question || dynamicContent?.description
+            }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const newFeedbacks = [...stepFeedbacks];
+            newFeedbacks[currentStep] = data.feedback;
+            setStepFeedbacks(newFeedbacks);
+          }
+        } catch (error) {
+          console.error('Failed to get step feedback:', error);
+        } finally {
+          setIsFeedbackLoading(false);
+        }
+      }
       setCurrentStep(currentStep + 1);
     }
   };
@@ -685,17 +728,37 @@ export default function WritePage() {
                         />
                       </div>
                     </div>
+                    {stepFeedbacks[index] && (
+                      <div className="mt-4 p-5 bg-primary/5 border border-primary/20 rounded-xl animate-in slide-in-from-left duration-500 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                        <div className="flex items-start gap-3">
+                          <Sparkles className="w-5 h-5 text-primary mt-1 shrink-0" />
+                          <div className="text-sm font-serif leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                            {stepFeedbacks[index]}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {index === currentStep && stepInputs[index]?.answer && (
                       <div className="flex justify-end mt-3">
-                        <Button onClick={handleNextStep} disabled={!stepInputs[index]?.answer} className="vintage-button-primary flex items-center gap-2">
-                          次へ進む
-                          <ChevronRight className="w-4 h-4" />
+                        <Button 
+                          onClick={handleNextStep} 
+                          disabled={!stepInputs[index]?.answer || isFeedbackLoading} 
+                          className="vintage-button-primary flex items-center gap-2 group relative overflow-hidden"
+                        >
+                          {isFeedbackLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="relative z-10">次へ進む</span>
+                              <ChevronRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+                            </>
+                          )}
                         </Button>
                       </div>
                     )}
                   </div>
                 ))}
-              </div>
             </div>
           )}
         </div>
