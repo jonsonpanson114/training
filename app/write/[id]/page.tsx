@@ -759,6 +759,7 @@ export default function WritePage() {
                     )}
                   </div>
                 ))}
+              </div>
             </div>
           )}
         </div>
