@@ -1,3 +1,7 @@
+# Verbalize (零秒言語化)
+
+[![Vercel Deployment Status](https://vercel.com/api/projects/status/prj_WKQEUK2Jvf3U076J6FZvhmDqtmqB?s=team_rR45q5Q1Hhplom27FSbXxymZ&v=1)](https://verbalize.vercel.app)
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
