@@ -21,15 +21,25 @@ export async function POST() {
     return NextResponse.json({ error: 'No active subscription found.' }, { status: 404 });
   }
 
-  const target = subscriptions[0];
-  const result = await sendWebPush(target, {
-    title: 'Verbalize',
-    body: 'テスト通知です。毎日の3分トレーニングを続けましょう。',
-    url: '/',
-  });
-
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error || 'Push send failed.' }, { status: 500 });
+  let sent = 0;
+  let failed = 0;
+  let lastError = '';
+  for (const target of subscriptions) {
+    const result = await sendWebPush(target, {
+      title: 'Verbalize',
+      body: 'テスト通知です。毎日の3分トレーニングを続けましょう。',
+      url: '/',
+    });
+    if (result.ok) {
+      sent += 1;
+      break;
+    }
+    failed += 1;
+    lastError = result.error || lastError;
   }
-  return NextResponse.json({ message: 'テスト通知を送信しました。' });
+
+  if (sent === 0) {
+    return NextResponse.json({ error: lastError || 'Push send failed.', sent, failed }, { status: 500 });
+  }
+  return NextResponse.json({ message: 'テスト通知を送信しました。', sent, failed });
 }
