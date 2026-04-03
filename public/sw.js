@@ -14,11 +14,12 @@ self.addEventListener('push', (event) => {
     data = { title: 'Verbalize', body: '通知を受信しました。' };
   }
 
+  const origin = self.location.origin;
   const title = data.title || 'Verbalize';
   const options = {
     body: data.body || '今日の3分トレーニングを始めましょう。',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: data.icon || `${origin}/icon-512.png`,
+    badge: data.badge || `${origin}/badge-96.png`,
     data: { url: data.url || '/' },
   };
 
