@@ -328,8 +328,8 @@ export default function WritePage() {
           category: prompt?.category || id,
           content,
           tags,
-          imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null,
-          contextText: dynamicContent?.description || (prompt as any)?.description || null,
+          imageUrl: dynamicContent?.imageUrl || null,
+          contextText: dynamicContent?.description || prompt?.description || null,
         }),
       });
 
@@ -360,8 +360,8 @@ export default function WritePage() {
         category: prompt?.category || id,
         content,
         tags,
-        imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null,
-        contextText: dynamicContent?.description || (prompt as any)?.description || null,
+        imageUrl: dynamicContent?.imageUrl || null,
+        contextText: dynamicContent?.description || prompt?.description || null,
         createdAt: createdAt,
         isOffline: finalEntryId.startsWith('local_')
       };
@@ -392,7 +392,13 @@ export default function WritePage() {
         streak = 1;
       }
 
-      const badge = decideDailyBadge({ content, tags, imageUrl: dynamicContent?.imageUrl || (prompt as any)?.imageUrl || null, contextText: dynamicContent?.description || (prompt as any)?.description || null, isHardMode });
+      const badge = decideDailyBadge({
+        content,
+        tags,
+        imageUrl: dynamicContent?.imageUrl || null,
+        contextText: dynamicContent?.description || prompt?.description || null,
+        isHardMode,
+      });
       localStorage.setItem(`verbalize_badge_${getTodayKey(today)}`, JSON.stringify(badge));
       if (isDailyMode) {
         localStorage.setItem(`verbalize_daily_completed_${getTodayKey(today)}`, '1');

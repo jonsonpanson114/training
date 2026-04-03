@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Calendar, FileText, Trash2, BarChart3, Search, Filter, Loader2, Sparkles, Brain, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -355,10 +356,12 @@ export default function HistoryPage() {
                 </p>
                 {entry.imageUrl && (
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3 border border-border shadow-inner group">
-                    <img
+                    <Image
                       src={entry.imageUrl}
                       alt={entry.promptTitle}
+                      fill
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                       <p className="text-white text-xs font-serif italic truncate">{entry.contextText}</p>
