@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+const fs = require("fs");
+const code = `import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GOOGLE_AI_API_KEY || "";
@@ -7,7 +8,7 @@ const textModel = genAI ? genAI.getGenerativeModel({ model: "gemini-3-flash-prev
 const imageModel = genAI ? genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" }) : null;
 
 function extractJsonObject(text) {
-  const match = text.match(/\{[\s\S]*\}/);
+  const match = text.match(/\\{[\\s\\S]*\\}/);
   return match ? JSON.parse(match[0]) : null;
 }
 
@@ -55,4 +56,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
-}
+}`;
+fs.writeFileSync("app/api/ai/generate-prompt/route.ts", code);
