@@ -1,26 +1,19 @@
 import { NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isGasPushConfigured } from '@/lib/gas-push-store';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
-  if (!isSupabaseConfigured() || !supabase) {
-    return NextResponse.json({ error: 'Supabase not configured.' }, { status: 503 });
+  if (!isGasPushConfigured()) {
+    return NextResponse.json(
+      { error: 'GAS push storage is not configured. Set GAS_URL and GAS_AUTH_TOKEN.' },
+      { status: 503 }
+    );
   }
 
-  const body = (await request.json().catch(() => ({}))) as { userId?: string };
-  const userId = body.userId?.trim();
-  if (!userId) {
-    return NextResponse.json({ error: 'User ID is required.' }, { status: 400 });
-  }
-
-  const { error } = await supabase
-    .from('push_subscriptions')
-    .delete()
-    .eq('user_id', userId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ success: true });
+  await request.json().catch(() => ({}));
+  return NextResponse.json({
+    success: true,
+    message: 'Local unsubscribe completed. GAS sheet entry remains and will be overwritten on next subscribe.',
+  });
 }
