@@ -280,61 +280,83 @@ export const fixedPrompts: Prompt[] = [
 ];
 
 // Dynamic prompt configurations
-export const dynamicPrompts: Record<string, { title: string; description: string; timeLimit: number }> = {
+export const dynamicPrompts: Record<string, { title: string; description: string; timeLimit: number; goal: string; guide: string }> = {
   abduction: {
     title: 'アブダクション道場',
     description: '奇妙な現象に対して、考えられる仮説を3つ挙げ、それぞれの根拠を説明',
-    timeLimit: 7
+    timeLimit: 7,
+    goal: 'わずかな手がかりから「もっともらしい仮説」を導き出す、創造的推論力を鍛える。',
+    guide: 'ただの状況説明じゃねえぞ。その背後にある「ありえないけど筋が通ってる物語」をひねり出せ。'
   },
   synapse: {
     title: 'Synapse Match',
     description: '無関係な2つの言葉から、共通点を2分以内で10個ひねり出す',
-    timeLimit: 3
+    timeLimit: 3,
+    goal: '遠く離れた概念を結びつけることで、脳の連合野を刺激し、新しいアイデアの種を見つける。',
+    guide: '見た目、音、歴史、用途。何でもいいから「共通点という名の橋」を強引に架けてみろ。'
   },
   metaphor: {
     title: 'Metaphor Maker',
     description: '難しい概念を、バカでもわかるたとえ話で説明',
-    timeLimit: 5
+    timeLimit: 5,
+    goal: '物事の本質を抜き出し、身近なイメージに変換する能力を鍛える。',
+    guide: '専門用語を一切使うな。小学生がその映像を思い浮かべて「ああ、そういうことか！」と言わせたら勝ちだ。'
   },
   fogcatcher: {
     title: 'Fog Catcher（思考の霧払い）',
     description: '頭の中にあるグチャグチャな悩みや考えをそのまま書き出すフリーライティング（3分）',
-    timeLimit: 3
+    timeLimit: 3,
+    goal: '思考の渋滞を解消し、自分が本当は何を考えているのかを可視化する。',
+    guide: '文法も誤字も無視しろ。筆を止めるな。頭の中にあるゴミを全部紙の上にぶちまけるつもりでかけ。'
   },
   whysos: {
     title: 'Why So（なぜなぜ分析）',
     description: '一つの課題に対して「なぜ？」を5回突きつけて根本原因を探る',
-    timeLimit: 5
+    timeLimit: 5,
+    goal: '表面的な事象の裏にある、構造的な問題や根本原因を特定する批判的思考力を磨く。',
+    guide: '「やる気がない」なんてのは理由じゃねえ、逃げだ。5回繰り返すうちに自分の醜い本音や、システムの欠陥が出てくるはずだ。'
   },
   sowhat: {
     title: 'So What?（つまり何？）',
     description: '事実に対して「つまりどういうこと？」と問い、抽象度の階段を登る',
-    timeLimit: 5
+    timeLimit: 5,
+    goal: '単なる情報から「示唆（インサイト）」を引き出し、自分なりの教訓や法則を見出す。',
+    guide: '「テレビが面白い」→「つまり？」→「人の関心は〇〇にある」。事実の先にある、あんただけの「教訓」を掴み取れ。'
   },
   '5w1h': {
     title: '5W1H 展開',
     description: '情報を6つの要素に整理して、具体的なアクションプランに落とし込む',
-    timeLimit: 5
+    timeLimit: 5,
+    goal: '思考の漏れをなくし、情報を多角的に整理して、他者に伝える際の基本構造を作る。',
+    guide: '「いつ」「どこで」から逃げるな。具体性が増せば増すほど、あんたの行動の解像度は上がる。'
   },
-  prep: {
+  'prep': {
     title: 'PREP法',
     description: '意見を「結論・理由・具体例・結論」で構成',
-    timeLimit: 5
+    timeLimit: 5,
+    goal: '論理的で説得力のある説明の型を身につけ、短時間で要点を伝える力を鍛える。',
+    guide: '最初に結論、最後に結論。この「挟み込み」が、相手の脳にあんたの主張を刻み込む。'
   },
   'abduction-lens': {
     title: 'Abduction Lens',
     description: '「決定的瞬間」のシーンに対し、[観察事実]・[仮説]・[根拠]を記述',
-    timeLimit: 7
+    timeLimit: 7,
+    goal: '視覚情報から「目に見えない背景」を推論し、根拠を持って説明する力を多角的に鍛える。',
+    guide: '画像にある細かい描写、色、配置を徹底的に利用しろ。そこから立ち上がる「事件」を見逃すな。'
   },
   analogy: {
     title: 'Analogy Training（アナロジートレーニング）',
     description: '異なる領域のパターンを借りて、問題解決のヒントを見つける',
-    timeLimit: 7
+    timeLimit: 7,
+    goal: '全く別の世界の仕組みを自分の課題に応用する「ストラクチャル・マッピング」を鍛える。',
+    guide: 'カレー作りと組織運営。何が似てる？ 「スパイスの調合」は「才能の組み合わせ」かもしれねえ。構造を借りてこい。'
   },
   'metaphor-coach': {
     title: 'Metaphor Coach（メタファーコーチ）',
     description: '5ステップで比喩表現を作る力を鍛える',
-    timeLimit: 10
+    timeLimit: 10,
+    goal: '特徴の解体から飛躍、そして洗練という芸術的なプロセスを経て、言語の「鋭さ」を研ぎ澄ます。',
+    guide: '5ステップは登山だ。一歩ずつ、概念の核に近づいていけ。最後に俺を驚かせるメタファーを披露しろ。'
   }
 };
 

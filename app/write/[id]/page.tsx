@@ -37,6 +37,8 @@ export default function WritePage() {
     question?: string;
     prompts?: string[];
     steps?: Array<{ step: number; label: string; placeholder: string }>;
+    goal?: string;
+    guide?: string;
   } | null>(null);
   const [stepInputs, setStepInputs] = useState<StepInput[]>([]);
   const [content, setContent] = useState('');
@@ -185,30 +187,39 @@ export default function WritePage() {
       if (type === 'abduction') {
         setDynamicContent({
           title: 'アブダクション道場',
-          description: result.phenomenon || '奇妙な現象に対して、考えられる仮説を3つ挙げてください'
+          description: result.phenomenon || '奇妙な現象に対して、考えられる仮説を3つ挙げてください',
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'synapse') {
         setDynamicContent({
           title: 'Synapse Match',
-          description: `${result.word1 || 'コーヒー'}と${result.word2 || '雲'}の共通点を10個見つけてください`
+          description: `${result.word1 || 'コーヒー'}と${result.word2 || '雲'}の共通点を10個見つけてください`,
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'metaphor') {
         setDynamicContent({
           title: 'Metaphor Maker',
-          description: `${result.concept || 'ブロックチェーン'}をバカでもわかる例え話で説明してください`
+          description: `${result.concept || 'ブロックチェーン'}をバカでもわかる例え話で説明してください`,
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'abduction-lens') {
         setDynamicContent({
           title: 'Abduction Lens',
           description: result.description || '決定的瞬間のシーンに対して、観察事実と仮説を記述してください',
-          imageUrl: result.imageUrl
+          imageUrl: result.imageUrl,
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'whysos') {
-        console.log('Setting whysos content with result:', result);
         setDynamicContent({
           title: 'Why So（なぜなぜ分析）',
           description: result.question || '以下から深掘りしたい課題を選択してください。',
           prompts: result.prompts,
+          goal: result.goal,
+          guide: result.guide,
           steps: result.steps || [
             { step: 1, label: '1回目「なぜ？」', placeholder: '1つ目の原因を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「なぜ？」', placeholder: 'さらに深く掘り下げてください（20〜40文字）' },
@@ -222,6 +233,8 @@ export default function WritePage() {
           title: 'So What?（つまり何？）',
           description: result.question || '以下から抽象化したいテーマを選択してください。',
           prompts: result.prompts,
+          goal: result.goal,
+          guide: result.guide,
           steps: result.steps || [
             { step: 1, label: '1回目「つまり何？」', placeholder: 'この事実から意味や影響を考えてください（20〜40文字）' },
             { step: 2, label: '2回目「つまり何？」', placeholder: 'さらに深い意味を探ってください（20〜40文字）' },
@@ -235,6 +248,8 @@ export default function WritePage() {
           title: '5W1H 展開',
           description: result.question || '以下から整理したいテーマを選択してください。',
           prompts: result.prompts,
+          goal: result.goal,
+          guide: result.guide,
           steps: result.steps || [
             { step: 1, label: 'When（いつ）', placeholder: 'いつ起こりましたか？（10〜20文字）' },
             { step: 2, label: 'Where（どこ）', placeholder: 'どこで起こりましたか？（10〜20文字）' },
@@ -249,6 +264,8 @@ export default function WritePage() {
           title: 'PREP法',
           description: result.question || '以下から伝えたいテーマを選択してください。',
           prompts: result.prompts,
+          goal: result.goal,
+          guide: result.guide,
           steps: result.steps || [
             { step: 1, label: 'Point（結論）', placeholder: '主張を述べてください（20〜40文字）' },
             { step: 2, label: 'Reason（理由）', placeholder: 'その理由を説明してください（20〜40文字）' },
@@ -262,20 +279,26 @@ export default function WritePage() {
           title: 'アナロジートレーニング',
           description: `【課題】：${challenge} \n 【大テーマ】：${bigTheme}`,
           prompts: result.prompts,
-          steps: result.steps
+          steps: result.steps,
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'metaphor-coach') {
         setDynamicContent({
           title: 'メタファーコーチ',
           description: result.prompts?.[0] || '愛',
           prompts: result.prompts,
-          steps: result.steps
+          steps: result.steps,
+          goal: result.goal,
+          guide: result.guide
         });
       } else if (type === 'fogcatcher') {
         setDynamicContent({
           title: 'Fog Catcher（思考の霧払い）',
           description: result.question || '以下から書き出したいテーマを選択してください。',
           prompts: result.prompts,
+          goal: result.goal,
+          guide: result.guide,
           question: result.question
         });
       }
@@ -583,6 +606,31 @@ export default function WritePage() {
               <p className="text-foreground/80 leading-relaxed">{displayDescription}</p>
             </div>
           </div>
+
+          {(dynamicContent?.goal || dynamicPrompts[id]?.goal) && (
+            <div className="mb-6 p-5 bg-accent/5 border border-accent/20 rounded-2xl animate-in fade-in slide-in-from-left duration-700">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="w-4 h-4 text-accent" />
+                <span className="text-xs font-bold text-accent uppercase tracking-widest">トレーニングの狙い</span>
+              </div>
+              <p className="text-sm text-foreground/90 font-medium leading-relaxed">
+                {dynamicContent?.goal || dynamicPrompts[id]?.goal}
+              </p>
+            </div>
+          )}
+
+          {(dynamicContent?.guide || dynamicPrompts[id]?.guide) && (
+            <div className="mb-6 p-5 bg-primary/5 border border-primary/20 rounded-2xl animate-in fade-in slide-in-from-right duration-700 relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+               <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">陣内コーチの極意</span>
+              </div>
+              <p className="text-sm text-foreground/90 font-serif italic leading-relaxed">
+                「{dynamicContent?.guide || dynamicPrompts[id]?.guide}」
+              </p>
+            </div>
+          )}
           {dynamicContent?.imageUrl && (
             <div className="mt-6 rounded-2xl overflow-hidden border border-border">
               <Image
