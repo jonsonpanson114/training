@@ -31,8 +31,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const title = (body.title || 'Verbalize').toString();
-  const message = (body.body || '今日の3分トレーニングを始めましょう。').toString();
+  const title = (body.title || '言語化道場 (Verbalize)').toString();
+  const message = (body.body || '道場の門が開きました。今日の1本、打ってみませんか？').toString();
 
   const direct = normalizeSubscription(body.subscription);
   const targets: PushSubscription[] = [];

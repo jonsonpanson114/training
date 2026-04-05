@@ -79,11 +79,16 @@ async function generateAbduction(): Promise<GeneratedResult> {
     phenomenon: "真夜中のオフィス。誰もいないフロアで、すべてのシュレッダーが同時に動き出した。",
   };
   if (!textModel) return fallback;
-  const text = await askText("奇妙で不可解な、仮説を立て甲斐のある現象を1つ。日本語で1-2文。現象のみ出力。");
+  const text = await askText("「なぜそんなことが起きたのか？」と推論したくなる、日常的だが少し奇妙でドラマチックな謎を1つ。日本語で1-2文。例：『毎朝同じ時間に、誰もいないはずの隣の部屋からピアノの音が聞こえてくる』。現象のみ出力。");
   return { 
     phenomenon: text || fallback.phenomenon,
-    goal: "わずかな手がかりから「もっともらしい仮説」を導き出す、創造的推論力を鍛える。",
-    guide: "ただの状況説明じゃねえぞ。その背後にある「ありえないけど筋が通ってる物語」をひねり出せ。"
+    goal: "正解のない問いに対し、わずかな手がかりから「筋の通った物語」を構築する力を鍛える。",
+    guide: "科学的な正解なんていらねえ！「1.観察事実」「2.仮説」「3.根拠」の3ステップで、俺を納得させる大ボラを吹いてみろ！",
+    steps: [
+      { step: 1, label: "❶ 観察事実", placeholder: "今、何が起きているか？" },
+      { step: 2, label: "❷ 飛躍的仮説", placeholder: "実は、こういうことじゃねえか？" },
+      { step: 3, label: "❸ 推論の連結", placeholder: "なぜそう言えるのか、証拠を挙げろ" }
+    ]
   };
 }
 
@@ -139,9 +144,9 @@ async function generateAbductionLens(): Promise<GeneratedResult> {
     goal: "視覚情報から「目に見えない背景」を推論し、根拠を持って説明する力を多角的に鍛える。",
     guide: "画像にある細かい描写、色、配置を徹底的に利用しろ。そこから立ち上がる「事件」を見逃すな。",
     steps: [
-      { step: 1, label: "❶ 観察事実", placeholder: "目に見える事実を書き出せ" },
-      { step: 2, label: "❷ 飛躍的仮説", placeholder: "裏で何が起きていたのか？" },
-      { step: 3, label: "❸ 推論の連結", placeholder: "なぜそう思ったのか？" }
+      { step: 1, label: "❶ 観察事実", placeholder: "画像から読み取れる事実は？" },
+      { step: 2, label: "❷ 飛躍探偵のガリレオ", placeholder: "このシーンの裏に潜む真実は？" },
+      { step: 3, label: "❸ 解決のロジック", placeholder: "その結論に至った決定的な証拠は？" }
     ]
   };
 }

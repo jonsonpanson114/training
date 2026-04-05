@@ -283,10 +283,10 @@ export const fixedPrompts: Prompt[] = [
 export const dynamicPrompts: Record<string, { title: string; description: string; timeLimit: number; goal: string; guide: string }> = {
   abduction: {
     title: 'アブダクション道場',
-    description: '奇妙な現象に対して、考えられる仮説を3つ挙げ、それぞれの根拠を説明',
+    description: '日常に潜む「なぜ？」や「変な出来事」に対し、自分なりの納得のいく仮説を3つデッチ上げる',
     timeLimit: 7,
-    goal: 'わずかな手がかりから「もっともらしい仮説」を導き出す、創造的推論力を鍛える。',
-    guide: 'ただの状況説明じゃねえぞ。その背後にある「ありえないけど筋が通ってる物語」をひねり出せ。'
+    goal: '正解のない問いに対し、わずかな手がかりから「筋の通った物語（プロトタイプ）」を高速で構築する力を鍛える。',
+    guide: '科学的な正解なんていらねえ！「1.観察事実（何が起きたか）」「2.仮説（実はこうなんじゃねえか？）」「3.根拠（なぜそう思うか）」の3ステップで、俺を納得させる大ボラを吹いてみろ！'
   },
   synapse: {
     title: 'Synapse Match',

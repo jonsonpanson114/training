@@ -17,12 +17,12 @@ const notoSans = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Abduction Lens - 零秒言語化トレーニング",
-  description: "決定的な一瞬を捉え、仮説を紡ぎ出す。阿武妥苦衝（アブダクション）の深淵へ導くトレーニングアプリ。",
+  title: "Verbalize - 漆黒の言語化道場",
+  description: "言葉の壁を破壊し、未踏の思考領域を言語化せよ。Gemini 3.1 搭載の超次元言語化トレーニング。",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Abduction Lens",
+    title: "Verbalize",
   },
   formatDetection: {
     telephone: false,

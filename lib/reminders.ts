@@ -77,9 +77,11 @@ function fireReminder(slot: 'morning' | 'evening', message: string): void {
   if (!canNotify()) return;
   const nowKey = dayKeyOf(new Date());
   if (hasSentToday(slot, nowKey)) return;
-  const notification = new Notification('言語化道場 (Verbalize)', {
+  const notification = new Notification('アブダクション道場', {
     body: message,
     tag: `verbalize-${slot}-${nowKey}`,
+    icon: '/icon-192x192.png',
+    badge: '/badge-96x96.png'
   });
   notification.onclick = () => {
     window.focus();
