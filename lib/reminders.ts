@@ -77,9 +77,9 @@ function fireReminder(slot: 'morning' | 'evening', message: string): void {
   if (!canNotify()) return;
   const nowKey = dayKeyOf(new Date());
   if (hasSentToday(slot, nowKey)) return;
-  const notification = new Notification('Abduction Lens', {
+  const notification = new Notification('言語化道場 (Verbalize)', {
     body: message,
-    tag: `abduction-lens-${slot}-${nowKey}`,
+    tag: `verbalize-${slot}-${nowKey}`,
   });
   notification.onclick = () => {
     window.focus();
@@ -96,11 +96,11 @@ export function sendMissedReminderOnOpen(settings: ReminderSettings, todayDone: 
   evening.setHours(settings.eveningHour, 0, 0, 0);
 
   if (now >= evening) {
-    fireReminder('evening', '今日の3分トレーニング、まだなら今がチャンスです。');
+    fireReminder('evening', '今日のトレーニング、まだなら今がチャンスです。1日を言葉で締めくくりましょう。');
     return;
   }
   if (now >= morning) {
-    fireReminder('morning', '今日の1本を書いて、思考のエンジンを起動しましょう。');
+    fireReminder('morning', '今日の1本を書いて、思考のエンジンを起動しましょう。言葉が世界を作ります。');
   }
 }
 
@@ -125,7 +125,7 @@ export function scheduleSessionReminders(settings: ReminderSettings, todayDone: 
   };
 
   scheduleOne('morning', settings.morningHour, '今日の1本を書いて、思考のエンジンを起動しましょう。');
-  scheduleOne('evening', settings.eveningHour, 'まだ間に合います。3分だけ言語化して締めましょう。');
+  scheduleOne('evening', settings.eveningHour, 'まだ間に合います。今日の思考を言葉にして、1日を完結させましょう。');
 
   return () => {
     timers.forEach((id) => clearTimeout(id));
