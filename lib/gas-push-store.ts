@@ -16,7 +16,7 @@ export interface GasNotificationSettings {
 
 const gasUrl = process.env.GAS_URL || process.env.NEXT_PUBLIC_GAS_URL || '';
 const gasAuthToken = process.env.GAS_AUTH_TOKEN || '';
-const gasAppName = process.env.GAS_APP_NAME || 'verbalize';
+const gasAppName = 'verbalize'; // 常に verbalize として振る舞う
 
 async function callGas(action: string, payload: Record<string, unknown>): Promise<GasResponse> {
   if (!gasUrl || !gasAuthToken) {
