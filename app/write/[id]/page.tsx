@@ -611,7 +611,7 @@ export default function WritePage() {
             <div className="mb-6 p-5 bg-accent/5 border border-accent/20 rounded-2xl animate-in fade-in slide-in-from-left duration-700">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="w-4 h-4 text-accent" />
-                <span className="text-xs font-bold text-accent uppercase tracking-widest">トレーニングの狙い</span>
+                <span className="text-xs font-bold text-accent uppercase tracking-widest">何を聞かれているか（トレーニングの狙い）</span>
               </div>
               <p className="text-sm text-foreground/90 font-medium leading-relaxed">
                 {dynamicContent?.goal || dynamicPrompts[id]?.goal}
@@ -624,11 +624,11 @@ export default function WritePage() {
                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">陣内コーチの極意</span>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">具体的に何をするか（陣内コーチの極意）</span>
               </div>
-              <p className="text-sm text-foreground/90 font-serif italic leading-relaxed">
-                「{dynamicContent?.guide || dynamicPrompts[id]?.guide}」
-              </p>
+              <div className="text-sm text-foreground/90 font-serif leading-relaxed whitespace-pre-wrap">
+                {dynamicContent?.guide || dynamicPrompts[id]?.guide}
+              </div>
             </div>
           )}
           {dynamicContent?.imageUrl && (
