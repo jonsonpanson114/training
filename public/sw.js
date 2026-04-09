@@ -15,11 +15,11 @@ self.addEventListener('push', (event) => {
   }
 
   const origin = self.location.origin;
+  const iconUrl = `${origin}/icon.png?v=20260409a`;
   const title = data.title || 'Verbalize';
   const options = {
     body: data.body || '今日の3分トレーニングを始めましょう。',
-    icon: data.icon || `${origin}/icon-512.png`,
-    badge: data.badge || `${origin}/badge-96.png`,
+    icon: data.icon || iconUrl,
     data: { url: data.url || '/' },
   };
 
