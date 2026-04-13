@@ -101,7 +101,7 @@ async function generateSynapse(): Promise<GeneratedResult> {
     word1: parts[0] || fallback.word1, 
     word2: parts[1] || fallback.word2,
     goal: "遠く離れた概念を結びつけることで、脳の連合野を刺激し、新しいアイデアの種を見つける。",
-    guide: "見た目、音、歴史、用途。何でもいいから「共通点という名の橋」を強引に架けてみろ。"
+    guide: "【聞かれていること】：離れた2つの言葉を結ぶ「共通点」。\n【答えるべきこと】：見た目、役割、歴史、音、比喩。どんな角度でもいいから、共通項を10個。\n【具体的な行動】：論理は無視しろ。共通点という名の「橋」を強引に10本架けてみろ！"
   };
 }
 
@@ -112,7 +112,7 @@ async function generateMetaphor(): Promise<GeneratedResult> {
   return { 
     concept: text || fallback.concept,
     goal: "物事の本質を抜き出し、身近なイメージに変換する能力を鍛える。",
-    guide: "専門用語を一切使うな。小学生がその映像を思い浮かべて「ああ、そういうことか！」と言わせたら勝ちだ。"
+    guide: "【聞かれていること】：概念の本質を射抜いた「例え話」。\n【答えるべきこと】：専門用語を一切使わない、小学生でも一瞬で映像が浮かぶ描写。\n【具体的な行動】：概念を「分解」して、一番似てる「日常の風景」を探してこい。俺に「ああ、それって○○みたいなもんやな！」と言わせたら勝ちだ。"
   };
 }
 
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
           { step: 3, label: "なぜ？(3)", placeholder: "構造" },
           { step: 4, label: "なぜ？(4)", placeholder: "深層" },
           { step: 5, label: "なぜ？(5)", placeholder: "根本原因" }
-        ], "内部の構造的問題を特定する批判的思考力を磨く。", "「やる気がない」は理由じゃねえ。逃げずに、自分やシステムの欠陥を掘り起こせ。"); break;
+        ], "内部の構造的問題を特定する批判的思考力を磨く。", "【聞かれていること】：目の前の問題の「本当の原因」。\n【答えるべきこと】：「なぜ？」に対する答えを出し、さらにその答えに「なぜ？」を繰り返した結果。\n【具体的な行動】：「やる気がない」なんてのは逃げだ。泥臭い本音やシステムの欠陥が出るまで、ひたすら「なぜ」と打ち込め！"); break;
       case "sowhat":
         result = await generateListPrompt("「So What」向け事実を3つ。", ["スマホ利用増", "円安", "AI普及"], [
           { step: 1, label: "つまり？(1)", placeholder: "直接的意味" },
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           { step: 3, label: "つまり？(3)", placeholder: "示唆" },
           { step: 4, label: "つまり？(4)", placeholder: "展望" },
           { step: 5, label: "つまり？(5)", placeholder: "本質" }
-        ], "事実から示唆を引き出し、自分なりの法則を見出す。", "事実の先にある、あんただけの「教訓」を掴み取れ。"); break;
+        ], "事実から示唆を引き出し、自分なりの法則を見出す。", "【聞かれていること】：その事実を通じて、結局「何が言えるのか」。\n【答えるべきこと】：事実の裏側にある「普遍的なルール」や「自分なりの教訓」。\n【具体的な行動】：「テレビが面白い」→「つまり人の関心は〇〇だ」。ただの感想から脱却して、本質だけを抜き出せ！"); break;
       case "5w1h":
         result = await generateListPrompt("整理が必要なトラブルを1つ。", ["新企画の遅延"], [
           { step: 1, label: "When", placeholder: "いつ" },
@@ -209,20 +209,20 @@ export async function POST(request: NextRequest) {
           { step: 4, label: "What", placeholder: "何" },
           { step: 5, label: "Why", placeholder: "なぜ" },
           { step: 6, label: "How", placeholder: "どうやって" }
-        ], "思考の漏れをなくし、情報を多角的に整理する。", "具体性が増せば増すほど、あんたの行動の解像度は上がる。"); break;
+        ], "思考の漏れをなくし、情報を多角的に整理する。", "【聞かれていること】：フワッとした情報を「具体的な計画」にすること。\n【答えるべきこと】：誰が、何を、いつ、どこで、なぜ、どのようにやるか。\n【具体的な行動】：「いつ」「どこで」から絶対に逃げるな。全項目を埋めて、今すぐ動ける状態にしろ！"); break;
       case "prep":
         result = await generateListPrompt("PREP法で話すべき主張を3つ。", ["早起きは正義", "読書は必要"], [
           { step: 1, label: "Point", placeholder: "結論" },
           { step: 2, label: "Reason", placeholder: "理由" },
           { step: 3, label: "Example", placeholder: "具体例" },
           { step: 4, label: "Point", placeholder: "再定義" }
-        ], "短時間で要点を伝え、説得力を持たせる型を身につける。", "結論で挟み込め。それが相手の脳に主張を刻み込むコツだ。"); break;
+        ], "短時間で要点を伝え、説得力を持たせる型を身につける。", "【聞かれていること】：あんたの「主張」とその「正当性」。\n【答えるべきこと】：最初に結論、次に理由、そして具体例、最後に念押しの結論。\n【具体的な行動】：最初は「結論から言うと」で始めろ！この4ステップの型に無理やり当てはめろ！"); break;
       case "analogy":
         result = await generateListPrompt("「課題|大テーマ」を3つ。例: 離職防止|水漏れ修理", ["採用|オーディション"], [
           { step: 1, label: "分解", placeholder: "要素を抽出せよ" },
           { step: 2, label: "法則", placeholder: "成功法則を書け" },
           { step: 3, label: "転用", placeholder: "具体的なアクションは？" }
-        ], "他分野の仕組みを自分の課題に応用する力を鍛える。", "構造を借りてこい。スパイスの調合は才能の組み合わせかもしれねえ。"); break;
+        ], "他分野の仕組みを自分の課題に応用する力を鍛える。", "【聞かれていること】：今の課題を「別の何か」に置き換えた解決策。\n【答えるべきこと】：別の分野で似た構造を持つ事象と、そこから得られるヒント。\n【具体的な行動】：カレー作りと経営はどう似てる？違う世界から無理やり「成功パターン」をパクってこい！"); break;
       case "metaphor-coach":
         result = await generateListPrompt("比喩にしがいのある概念を3つ。", ["信頼", "時間"], [
           { step: 1, label: "特徴", placeholder: "解剖しろ" },
@@ -230,9 +230,9 @@ export async function POST(request: NextRequest) {
           { step: 3, label: "トーン", placeholder: "空気感を決めろ" },
           { step: 4, label: "接合", placeholder: "一旦比喩にしろ" },
           { step: 5, label: "完成", placeholder: "研ぎ澄ませよ" }
-        ], "芸術的なプロセスを経て、言語の鋭さを研ぎ澄ます。", "一歩ずつ、概念の核に近づけ。最後に俺を驚かせてみろ。"); break;
+        ], "芸術的なプロセスを経て、言語の鋭さを研ぎ澄ます。", "【聞かれていること】：平凡な言葉を「刺さる例え話」に進化させること。\n【答えるべきこと】：対象の分解、共通点の抽出、そして誰もが情景を思い浮かべる比喩。\n【具体的な行動】：1段ずつ登れ。焦るな。最後に「なるほど、それはまるで〇〇だな！」と唸らせる表現を作れ！"); break;
       case "fogcatcher":
-        result = await generateListPrompt("内省テーマを3つ。", ["モヤモヤ"], [], "思考の渋滞を解消し、真意を可視化する。", "文法も誤字も無視しろ。頭の中のゴミを全部ぶちまけるつもりで書け。");
+        result = await generateListPrompt("内省テーマを3つ。", ["モヤモヤ"], [], "思考の渋滞を解消し、真意を可視化する。", "【聞かれていること】：今、あんたの頭の中にある「すべて」。\n【答えるべきこと】：キレイな文章じゃなくていい。単語の羅列でも愚痴でも構わない。\n【具体的な行動】：文法も誤字も無視して、ひたすらキーボードを打ち続けろ！考える前に書き出せ！");
         result.question = "書き出したいテーマを選択してください";
         break;
       default: return NextResponse.json({ error: "Invalid" }, { status: 400 });
