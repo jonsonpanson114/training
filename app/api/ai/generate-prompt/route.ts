@@ -79,7 +79,7 @@ async function generateAbduction(): Promise<GeneratedResult> {
     phenomenon: "真夜中のオフィス。誰もいないフロアで、すべてのシュレッダーが同時に動き出した。",
   };
   if (!textModel) return fallback;
-  const text = await askText("「なぜそんなことが起きたのか？」と推論したくなる、日常的だが少し奇妙な謎を1つ。日本語で。語尾は『〜の真相を暴いてください。』で締めること。例：『毎朝10時に誰もいない公園のブランコが激しく揺れている現象の真相を暴いてください。』。現象のみ出力。");
+  const text = await askText("「なぜそんなことが起きたのか？」と推論したくなる、日常のちょっとした違和感やユーモラスな謎を1つ。日本語で。語尾は『〜の真相を暴いてください。』で締めること。※殺人、死体、幽霊、ホラー要素は一切禁止。例：『誰もいないはずの会議室に、毎朝10時ぴったりに熱々のブラックコーヒーが1杯だけ置かれている現象の真相を暴いてください。』。現象のみ出力。");
   return { 
     phenomenon: text || fallback.phenomenon,
     goal: "正解のない問いに対し、わずかな手がかりから「筋の通った物語」を構築する力を鍛える。",
@@ -122,13 +122,13 @@ async function generateAbductionLens(): Promise<GeneratedResult> {
   let imageUrl = "https://picsum.photos/seed/abduction/1200/800";
 
   if (textModel) {
-    const text = await askText("不気味でドラマチックな、推理の余地がある『決定的瞬間の描写』を1-2文で作成せよ。描写のみ出力。");
+    const text = await askText("日常風景の中で起きた、ちょっと奇妙でユーモラスな『推論したくなる決定的瞬間』の描写を1-2文で作成せよ。※殺人、流血、死体、幽霊、ホラー要素は絶対に禁止（例：道端に片方だけの赤い靴が等間隔で10メートル並んでいる、など）。描写のみ出力。");
     if (text) description = text;
   }
 
   if (imageModel) {
     try {
-      const imgRes = await imageModel.generateContent(`Create a cinematic, high-quality mysterious photo based on this scene. No text in image. Scene: ${description}`);
+      const imgRes = await imageModel.generateContent(`Create a cinematic, high-quality slightly quirky and realistic photo based on this scene. No text in image. No horror, no blood, no ghosts, no violence. Scene: ${description}`);
       const cand = imgRes.response.candidates?.[0];
       const part = cand?.content?.parts?.find(p => "inlineData" in p);
       const data = (part as any)?.inlineData;
