@@ -92,10 +92,19 @@ async function generateAbduction(): Promise<GeneratedResult> {
   };
 }
 
-async function generateSynapse(): Promise<GeneratedResult> {
+async function generateSynapse(level: number): Promise<GeneratedResult> {
   const fallback: GeneratedResult = { word1: "ピアノ", word2: "潜水艦" };
   if (!textModel) return fallback;
-  const text = await askText("全く無関係な日本語の名詞2つを「語1|語2」の形式で1行のみ出力。例: 鉛筆|ブラックホール");
+  
+  let instruction = "誰もが知っている、全く無関係な『日常的な名詞』2つを「語1|語2」の形式で1行のみ出力。奇抜すぎる言葉は避けること。例: リンゴ|自転車";
+  if (level >= 3) {
+    instruction = "物理的なモノと、全く無関係な『抽象概念（または感情）』の名詞を「語1|語2」の形式で1行のみ出力。例: スプーン|嫉妬";
+  }
+  if (level >= 6) {
+    instruction = "スケールが全く違う、無関係で難解な日本語の名詞2つを「語1|語2」の形式で1行のみ出力。例: ブラックホール|爪切り";
+  }
+
+  const text = await askText(instruction);
   const parts = text.split("|").map(s => s.trim()).filter(Boolean);
   return { 
     word1: parts[0] || fallback.word1, 
@@ -176,13 +185,14 @@ async function generateListPrompt(
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json().catch(() => ({}))) as { type?: string };
+    const body = (await request.json().catch(() => ({}))) as { type?: string; level?: number };
     const type = (body.type || "") as PromptType;
+    const level = body.level || 1;
     let result: GeneratedResult;
 
     switch (type) {
       case "abduction": result = await generateAbduction(); break;
-      case "synapse": result = await generateSynapse(); break;
+      case "synapse": result = await generateSynapse(level); break;
       case "metaphor": result = await generateMetaphor(); break;
       case "abduction-lens": result = await generateAbductionLens(); break;
       case "whysos":

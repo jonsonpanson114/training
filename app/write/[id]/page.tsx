@@ -173,10 +173,17 @@ export default function WritePage() {
   const generateDynamicPrompt = async (type: string) => {
     setIsGenerating(true);
     try {
+      let level = 1;
+      if (typeof window !== 'undefined') {
+        const savedEntries = JSON.parse(localStorage.getItem('verbalize_entries') || '[]');
+        const count = savedEntries.filter((e: any) => e.prompt_id === type).length;
+        level = count + 1; // 初回はレベル1、クリアするごとにレベルアップ
+      }
+
       const response = await fetch('/api/ai/generate-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type }),
+        body: JSON.stringify({ type, level }),
       });
 
       if (!response.ok) throw new Error('Failed to generate prompt');
