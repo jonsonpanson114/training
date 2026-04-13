@@ -362,9 +362,7 @@ export default function WritePage() {
         createdAt = newEntry.created_at;
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('API save failed:', errorData);
-        const errorMsg = errorData.error || response.statusText;
-        alert(`サーバーへの保存に失敗しました: ${errorMsg}\nローカル保存で続行します。`);
+        console.warn('クラウド保存（Supabase）が未設定または失敗しました。ローカル保存へフォールバックします。詳細:', errorData);
       }
     } catch (error) {
       console.error('Submission error, falling back to local storage:', error);
