@@ -114,10 +114,19 @@ async function generateSynapse(level: number): Promise<GeneratedResult> {
   };
 }
 
-async function generateMetaphor(): Promise<GeneratedResult> {
-  const fallback: GeneratedResult = { concept: "ダークマター" };
+async function generateMetaphor(level: number): Promise<GeneratedResult> {
+  const fallback: GeneratedResult = { concept: "スマホ" };
   if (!textModel) return fallback;
-  const text = await askText("比喩で説明しがいのある、少し難解で抽象的な概念を日本語で1つ。概念名のみ。");
+  
+  let instruction = "比喩で説明しやすい、誰もが知る身近なモノや概念を1つ。日本語で概念名のみ。例：自転車、冷蔵庫";
+  if (level >= 3) {
+    instruction = "比喩で説明しがいのある、少し難解で抽象的な概念や社会用語を1つ。日本語で概念名のみ。例：サプライチェーン、民主主義";
+  }
+  if (level >= 6) {
+    instruction = "比喩で説明するのが極めて難しい、高度な科学用語や哲学的な概念を1つ。日本語で概念名のみ。例：ダークマター、量子もつれ";
+  }
+
+  const text = await askText(instruction);
   return { 
     concept: text || fallback.concept,
     goal: "物事の本質を抜き出し、身近なイメージに変換する能力を鍛える。",
@@ -193,7 +202,7 @@ export async function POST(request: NextRequest) {
     switch (type) {
       case "abduction": result = await generateAbduction(); break;
       case "synapse": result = await generateSynapse(level); break;
-      case "metaphor": result = await generateMetaphor(); break;
+      case "metaphor": result = await generateMetaphor(level); break;
       case "abduction-lens": result = await generateAbductionLens(); break;
       case "whysos":
         result = await generateListPrompt("「なぜなぜ分析」向け課題を3つ。", ["会議が長い", "やる気が出ない", "ミスが多い"], [
@@ -227,20 +236,28 @@ export async function POST(request: NextRequest) {
           { step: 3, label: "Example", placeholder: "具体例" },
           { step: 4, label: "Point", placeholder: "再定義" }
         ], "短時間で要点を伝え、説得力を持たせる型を身につける。", "【聞かれていること】：あんたの「主張」とその「正当性」。\n【答えるべきこと】：最初に結論、次に理由、そして具体例、最後に念押しの結論。\n【具体的な行動】：最初は「結論から言うと」で始めろ！この4ステップの型に無理やり当てはめろ！"); break;
-      case "analogy":
-        result = await generateListPrompt("「課題|大テーマ」を3つ。例: 離職防止|水漏れ修理", ["採用|オーディション"], [
+      case "analogy": {
+        let instruction = "誰もが知る身近で簡単な「課題|大テーマ」を3つ。例: 部屋の片付け|料理";
+        if (level >= 3) instruction = "ビジネスや人間関係における「課題|大テーマ」を3つ。例: 離職防止|水漏れ修理";
+        if (level >= 6) instruction = "国家規模や抽象度の高い「課題|大テーマ」を3つ。例: 少子化対策|オーケストラ";
+        result = await generateListPrompt(instruction, ["採用|オーディション"], [
           { step: 1, label: "分解", placeholder: "要素を抽出せよ" },
           { step: 2, label: "法則", placeholder: "成功法則を書け" },
           { step: 3, label: "転用", placeholder: "具体的なアクションは？" }
         ], "他分野の仕組みを自分の課題に応用する力を鍛える。", "【聞かれていること】：今の課題を「別の何か」に置き換えた解決策。\n【答えるべきこと】：別の分野で似た構造を持つ事象と、そこから得られるヒント。\n【具体的な行動】：カレー作りと経営はどう似てる？違う世界から無理やり「成功パターン」をパクってこい！"); break;
-      case "metaphor-coach":
-        result = await generateListPrompt("比喩にしがいのある概念を3つ。", ["信頼", "時間"], [
+      }
+      case "metaphor-coach": {
+        let instruction = "比喩にしがいのある『身近で具体的なモノや感情』を3つ。例: 怒り、時計";
+        if (level >= 3) instruction = "比喩にしがいのある『少し難解で抽象的な概念・社会用語』を3つ。例: 信頼、時間、税金";
+        if (level >= 6) instruction = "比喩にするのが極めて難しい『高度な哲学・科学・抽象概念』を3つ。例: 実存主義、エントロピー、愛";
+        result = await generateListPrompt(instruction, ["信頼", "時間"], [
           { step: 1, label: "特徴", placeholder: "解剖しろ" },
           { step: 2, label: "連想", placeholder: "飛躍させろ" },
           { step: 3, label: "トーン", placeholder: "空気感を決めろ" },
           { step: 4, label: "接合", placeholder: "一旦比喩にしろ" },
           { step: 5, label: "完成", placeholder: "研ぎ澄ませよ" }
         ], "芸術的なプロセスを経て、言語の鋭さを研ぎ澄ます。", "【聞かれていること】：平凡な言葉を「刺さる例え話」に進化させること。\n【答えるべきこと】：対象の分解、共通点の抽出、そして誰もが情景を思い浮かべる比喩。\n【具体的な行動】：1段ずつ登れ。焦るな。最後に「なるほど、それはまるで〇〇だな！」と唸らせる表現を作れ！"); break;
+      }
       case "fogcatcher":
         result = await generateListPrompt("内省テーマを3つ。", ["モヤモヤ"], [], "思考の渋滞を解消し、真意を可視化する。", "【聞かれていること】：今、あんたの頭の中にある「すべて」。\n【答えるべきこと】：キレイな文章じゃなくていい。単語の羅列でも愚痴でも構わない。\n【具体的な行動】：文法も誤字も無視して、ひたすらキーボードを打ち続けろ！考える前に書き出せ！");
         result.question = "書き出したいテーマを選択してください";
