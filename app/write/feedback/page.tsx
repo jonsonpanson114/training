@@ -31,6 +31,7 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
     feedback: string;
     suggestions: string[];
     followupQuestion?: string;
+    exampleAnswer?: string;
   } | null>(null);
   const [expGained, setExpGained] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +113,8 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
           '具体的な数字や事例をさらに盛り込むと、より説得力が増します',
           '対比構造を使うことで、ポイントがより際立ちます',
           '読み手を意識した表現を意識してみましょう'
-        ]
+        ],
+        exampleAnswer: 'お手本となる回答例をここに表示します。'
       });
     } finally {
       setIsLoading(false);
@@ -244,6 +246,25 @@ function FeedbackContent({ entryId }: { entryId: string | null }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Example Answer Card */}
+      {feedback?.exampleAnswer && (
+        <div className="vintage-card p-6 mb-6 animate-slide-up" style={{ animationDelay: '0.22s' }}>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="vintage-icon-container accent shrink-0">
+              <BookOpen className="w-5 h-5 text-background" />
+            </div>
+            <div>
+              <h3 className="font-serif font-semibold text-foreground mb-2">陣内コーチのお手本</h3>
+            </div>
+          </div>
+          <div className="bg-accent/5 p-4 rounded-xl border border-accent/20">
+            <p className="text-foreground/90 font-serif leading-relaxed italic whitespace-pre-wrap">
+              「{feedback.exampleAnswer}」
+            </p>
+          </div>
         </div>
       )}
       
