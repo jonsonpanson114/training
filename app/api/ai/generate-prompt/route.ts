@@ -237,9 +237,9 @@ export async function POST(request: NextRequest) {
           { step: 4, label: "Point", placeholder: "再定義" }
         ], "短時間で要点を伝え、説得力を持たせる型を身につける。", "【聞かれていること】：あんたの「主張」とその「正当性」。\n【答えるべきこと】：最初に結論、次に理由、そして具体例、最後に念押しの結論。\n【具体的な行動】：最初は「結論から言うと」で始めろ！この4ステップの型に無理やり当てはめろ！"); break;
       case "analogy": {
-        let instruction = "誰もが知る身近で簡単な「課題|大テーマ」を3つ。例: 部屋の片付け|料理";
-        if (level >= 3) instruction = "ビジネスや人間関係における「課題|大テーマ」を3つ。例: 離職防止|水漏れ修理";
-        if (level >= 6) instruction = "国家規模や抽象度の高い「課題|大テーマ」を3つ。例: 少子化対策|オーケストラ";
+        let instruction = "小学生でもわかる、身近な日常の「課題|全く異なる分野のテーマ」を3つ。例: 部屋の片付け|料理、ダイエット|RPGゲーム";
+        if (level >= 3) instruction = "ビジネスや仕事における「課題|全く異なる分野のテーマ」を3つ。例: 離職防止|水漏れ修理、売上向上|農業";
+        if (level >= 6) instruction = "国家規模など、極めて難解で抽象度の高い「課題|全く違う概念」を3つ。例: 少子化対策|オーケストラ、気候変動|チェス";
         result = await generateListPrompt(instruction, ["採用|オーディション"], [
           { step: 1, label: "分解", placeholder: "要素を抽出せよ" },
           { step: 2, label: "法則", placeholder: "成功法則を書け" },
@@ -247,9 +247,9 @@ export async function POST(request: NextRequest) {
         ], "他分野の仕組みを自分の課題に応用する力を鍛える。", "【聞かれていること】：今の課題を「別の何か」に置き換えた解決策。\n【答えるべきこと】：別の分野で似た構造を持つ事象と、そこから得られるヒント。\n【具体的な行動】：カレー作りと経営はどう似てる？違う世界から無理やり「成功パターン」をパクってこい！"); break;
       }
       case "metaphor-coach": {
-        let instruction = "比喩にしがいのある『身近で具体的なモノや感情』を3つ。例: 怒り、時計";
-        if (level >= 3) instruction = "比喩にしがいのある『少し難解で抽象的な概念・社会用語』を3つ。例: 信頼、時間、税金";
-        if (level >= 6) instruction = "比喩にするのが極めて難しい『高度な哲学・科学・抽象概念』を3つ。例: 実存主義、エントロピー、愛";
+        let instruction = "比喩の練習に最適な、小学生でも知っている『目に見えない簡単な概念（ルール、約束など）』を3つ。物理的なモノは禁止。例: 楽しさ、時間、ルール";
+        if (level >= 3) instruction = "比喩にしがいのある『少し抽象的な概念・感情』を3つ。例: 信頼、嫉妬、税金";
+        if (level >= 6) instruction = "比喩で表現するのが極めて難しい『高度な哲学・科学・社会概念』を3つ。例: 民主主義、エントロピー、実存主義";
         result = await generateListPrompt(instruction, ["信頼", "時間"], [
           { step: 1, label: "特徴", placeholder: "解剖しろ" },
           { step: 2, label: "連想", placeholder: "飛躍させろ" },
